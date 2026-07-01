@@ -4,9 +4,10 @@ function Button({
   type = "button",
   onClick,
   className = "",
+  disabled = false,
 }) {
   const base =
-  "min-w-[170px] px-6 py-3 rounded-xl font-semibold transition-all duration-300";
+    "min-w-[170px] px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
     primary:
@@ -23,6 +24,7 @@ function Button({
     <button
       type={type}
       onClick={onClick}
+      disabled={disabled}
       className={`${base} ${variants[variant]} ${className}`}
     >
       {children}
