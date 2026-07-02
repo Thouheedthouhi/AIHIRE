@@ -1,28 +1,84 @@
 import { Code2 } from "lucide-react";
 
-function SkillsCard({ skills = [] }) {
+function SkillsCard({
+  title = "Skills Detected",
+  subtitle = "Technologies identified from your resume",
+  skills = [],
+  color = "green",
+}) {
+  const colors = {
+    green: {
+      iconBg: "bg-green-50",
+      icon: "text-green-600",
+      badgeBg: "bg-green-50",
+      badgeBorder: "border-green-200",
+      badgeText: "text-green-700",
+      badgeHover: "hover:bg-green-100",
+      countBg: "bg-green-50",
+      countText: "text-green-700",
+    },
+
+    blue: {
+      iconBg: "bg-blue-50",
+      icon: "text-blue-600",
+      badgeBg: "bg-blue-50",
+      badgeBorder: "border-blue-200",
+      badgeText: "text-blue-700",
+      badgeHover: "hover:bg-blue-100",
+      countBg: "bg-blue-50",
+      countText: "text-blue-700",
+    },
+
+    purple: {
+      iconBg: "bg-purple-50",
+      icon: "text-purple-600",
+      badgeBg: "bg-purple-50",
+      badgeBorder: "border-purple-200",
+      badgeText: "text-purple-700",
+      badgeHover: "hover:bg-purple-100",
+      countBg: "bg-purple-50",
+      countText: "text-purple-700",
+    },
+  };
+
+  const theme = colors[color];
+
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
 
       {/* Header */}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
 
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50">
-          <Code2
-            size={24}
-            className="text-green-600"
-          />
+        <div className="flex items-center gap-3">
+
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl ${theme.iconBg}`}
+          >
+            <Code2
+              size={24}
+              className={theme.icon}
+            />
+          </div>
+
+          <div>
+
+            <h2 className="text-xl font-semibold text-slate-900">
+              {title}
+            </h2>
+
+            <p className="text-sm text-slate-500">
+              {subtitle}
+            </p>
+
+          </div>
+
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">
-            Skills Detected
-          </h2>
-
-          <p className="text-sm text-slate-500">
-            Technologies identified from your resume
-          </p>
+        <div
+          className={`rounded-full px-4 py-2 text-sm font-semibold ${theme.countBg} ${theme.countText}`}
+        >
+          {skills.length} Skills
         </div>
 
       </div>
@@ -35,27 +91,27 @@ function SkillsCard({ skills = [] }) {
           skills.map((skill) => (
             <span
               key={skill}
-              className="
+              className={`
                 rounded-full
                 border
-                border-green-200
-                bg-green-50
                 px-4
                 py-2
                 text-sm
                 font-medium
-                text-green-700
                 transition
-                hover:bg-green-100
-              "
+                ${theme.badgeBg}
+                ${theme.badgeBorder}
+                ${theme.badgeText}
+                ${theme.badgeHover}
+              `}
             >
               {skill}
             </span>
           ))
         ) : (
-          <p className="text-slate-500">
-            No skills detected.
-          </p>
+          <div className="w-full rounded-2xl bg-slate-50 p-6 text-center text-slate-500">
+            No skills found.
+          </div>
         )}
 
       </div>

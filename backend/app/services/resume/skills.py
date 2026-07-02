@@ -187,3 +187,133 @@ ALL_SKILLS = sorted(
         for skill in role.keys()
     }
 )
+
+# -----------------------------------------
+# Education Keywords
+# -----------------------------------------
+
+EDUCATION_KEYWORDS = [
+    "computer science",
+    "information science",
+    "software engineering",
+    "artificial intelligence",
+    "machine learning",
+    "data science",
+    "b.e",
+    "b.tech",
+    "bca",
+    "mca",
+]
+
+# -----------------------------------------
+# Project Keywords
+# -----------------------------------------
+
+PROJECT_KEYWORDS = [
+    "project",
+    "developed",
+    "implemented",
+    "designed",
+    "built",
+    "created",
+    "engineered",
+    "application",
+    "system",
+    "web app",
+    "mobile app",
+    "api",
+]
+
+# -----------------------------------------
+# Experience Keywords
+# -----------------------------------------
+
+EXPERIENCE_KEYWORDS = [
+    "internship",
+    "experience",
+    "software engineer",
+    "backend developer",
+    "frontend developer",
+    "full stack developer",
+    "developer",
+]
+
+# -----------------------------------------
+# Responsibility Keywords
+# -----------------------------------------
+
+ROLE_RESPONSIBILITIES = {
+
+    "Software Engineer": [
+        "develop",
+        "design",
+        "debug",
+        "optimize",
+        "maintain",
+        "deploy",
+        "test",
+        "collaborate",
+        "code review",
+    ],
+
+    "Backend Developer": [
+        "rest api",
+        "authentication",
+        "database",
+        "microservices",
+        "fastapi",
+        "performance",
+        "sql",
+    ],
+
+    "Frontend Developer": [
+        "react",
+        "javascript",
+        "responsive",
+        "ui",
+        "ux",
+        "css",
+        "tailwind",
+    ],
+
+    "Full Stack Developer": [
+        "frontend",
+        "backend",
+        "api",
+        "database",
+        "authentication",
+        "deployment",
+        "react",
+        "node",
+    ],
+
+    "AI / ML Engineer": [
+        "machine learning",
+        "deep learning",
+        "tensorflow",
+        "pytorch",
+        "model",
+        "training",
+        "prediction",
+    ],
+
+    "Data Scientist": [
+        "python",
+        "pandas",
+        "numpy",
+        "visualization",
+        "statistics",
+        "model",
+        "analysis",
+    ],
+
+    "DevOps Engineer": [
+        "docker",
+        "kubernetes",
+        "aws",
+        "azure",
+        "linux",
+        "ci/cd",
+        "jenkins",
+    ],
+}

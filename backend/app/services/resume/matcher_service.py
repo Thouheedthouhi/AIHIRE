@@ -1,41 +1,14 @@
-import re
+from app.services.resume.gemini_service import generate_ai_feedback
 
-from app.services.resume.skills import (
-    ROLE_SKILLS,
-    SKILL_ALIASES,
+from app.services.resume.match_utils import (
+    extract_skills,
+    weighted_skill_match,
+    education_score,
+    experience_score,
+    project_score,
+    keyword_match_score,
+    responsibility_score,
 )
-
-# ---------------------------------
-# Build a master skill list
-# ---------------------------------
-
-ALL_SKILLS = sorted(
-    {
-        skill
-        for role in ROLE_SKILLS.values()
-        for skill in role.keys()
-    }
-)
-
-
-def has_skill(text: str, skill: str):
-    """
-    Check whether a skill (or one of its aliases)
-    exists in the given text.
-    """
-
-    aliases = SKILL_ALIASES.get(
-        skill,
-        [skill.lower()],
-    )
-
-    text = text.lower()
-
-    for alias in aliases:
-        if alias.lower() in text:
-            return True
-
-    return False
 
 
 def match_resume(
@@ -43,117 +16,152 @@ def match_resume(
     job_description: str,
 ):
     """
-    Compare resume against a Job Description.
+    Professional Resume vs Job Description matching.
     """
 
     resume_lower = resume_text.lower()
     jd_lower = job_description.lower()
 
-    # -----------------------------
-    # Skills in Resume
-    # -----------------------------
+    # -------------------------------------
+    # Skills
+    # -------------------------------------
 
-    resume_skills = [
-        skill
-        for skill in ALL_SKILLS
-        if has_skill(resume_lower, skill)
-    ]
-
-    # -----------------------------
-    # Skills in JD
-    # -----------------------------
-
-    jd_skills = [
-        skill
-        for skill in ALL_SKILLS
-        if has_skill(jd_lower, skill)
-    ]
-
-    # -----------------------------
-    # Matched
-    # -----------------------------
-
-    matched_skills = [
-        skill
-        for skill in jd_skills
-        if skill in resume_skills
-    ]
-
-    # -----------------------------
-    # Missing
-    # -----------------------------
-
-    missing_skills = [
-        skill
-        for skill in jd_skills
-        if skill not in resume_skills
-    ]
-
-    # -----------------------------
-    # Extra
-    # -----------------------------
-
-    extra_skills = [
-        skill
-        for skill in resume_skills
-        if skill not in jd_skills
-    ]
-
-    # -----------------------------
-    # Skill Match %
-    # -----------------------------
-
-    if len(jd_skills) == 0:
-        skill_match = 100
-    else:
-        skill_match = round(
-            len(matched_skills)
-            / len(jd_skills)
-            * 100
-        )
-
-    overall_match = calculate_match_score(
+    resume_skills = extract_skills(
         resume_lower,
-        skill_match,
     )
+
+    jd_skills = extract_skills(
+        jd_lower,
+    )
+
+    (
+        skill_match,
+        matched_skills,
+        missing_skills,
+    ) = weighted_skill_match(
+        resume_skills,
+        jd_skills,
+    )
+
+    extra_skills = sorted(
+        list(
+            set(resume_skills)
+            - set(jd_skills)
+        )
+    )
+
+    # 40 Marks
+    skills_score = round(
+        skill_match * 0.40
+    )
+
+    # -------------------------------------
+    # Education
+    # -------------------------------------
+
+    education = education_score(
+        resume_lower,
+        jd_lower,
+    )
+
+    # -------------------------------------
+    # Experience
+    # -------------------------------------
+
+    experience = experience_score(
+        resume_lower,
+        jd_lower,
+    )
+
+    # -------------------------------------
+    # Projects
+    # -------------------------------------
+
+    projects = project_score(
+        resume_lower,
+    )
+
+    # -------------------------------------
+    # Responsibilities
+    # -------------------------------------
+
+    responsibilities = responsibility_score(
+        resume_text,
+        job_description,
+    )
+
+    # -------------------------------------
+    # Keyword Coverage
+    # -------------------------------------
+
+    keyword_score = keyword_match_score(
+        resume_text,
+        job_description,
+    )
+
+    # -------------------------------------
+    # Overall Score
+    # -------------------------------------
+
+    overall_match = min(
+        skills_score
+        + education
+        + experience
+        + projects
+        + responsibilities
+        + keyword_score,
+        100,
+    )
+
+    # -------------------------------------
+    # Gemini Feedback
+    # -------------------------------------
+
+    feedback = generate_ai_feedback(
+        resume_text=resume_text,
+        target_role="Resume vs Job Description",
+        ats_score=overall_match,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+        breakdown={
+            "skills": skills_score,
+            "projects": projects,
+            "experience": experience,
+            "sections": 0,
+            "formatting": 0,
+            "contact": 0,
+        },
+        job_description=job_description,
+    )
+
+    # -------------------------------------
+    # Response
+    # -------------------------------------
 
     return {
         "overall_match": overall_match,
         "skill_match": skill_match,
-        "matched_skills": sorted(matched_skills),
-        "missing_keywords": sorted(missing_skills),
-        "extra_skills": sorted(extra_skills),
+
+        "matched_skills": sorted(
+            matched_skills
+        ),
+
+        "missing_keywords": sorted(
+            missing_skills
+        ),
+
+        "extra_skills": sorted(
+            extra_skills
+        ),
+
+        "breakdown": {
+            "skills": skills_score,
+            "experience": experience,
+            "education": education,
+            "projects": projects,
+            "responsibilities": responsibilities,
+            "keywords": keyword_score,
+        },
+
+        **feedback,
     }
-
-
-def calculate_match_score(
-    resume_text: str,
-    skill_match: int,
-):
-    """
-    Overall Resume vs JD score.
-    """
-
-    score = 0
-
-    score += round(skill_match * 0.60)
-
-    if "project" in resume_text:
-        score += 10
-
-    if (
-        "experience" in resume_text
-        or "internship" in resume_text
-    ):
-        score += 10
-
-    if "education" in resume_text:
-        score += 10
-
-    if "github" in resume_text:
-        score += 5
-
-    if "linkedin" in resume_text:
-        score += 5
-
-    return min(score, 100)

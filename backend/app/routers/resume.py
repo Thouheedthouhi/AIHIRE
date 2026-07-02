@@ -11,6 +11,17 @@ from app.services.resume.resume_service import (
     analyze_resume_ats,
     analyze_resume_match,
 )
+from app.schemas.resume import (
+    ResumeUploadResponse,
+    ResumeAnalysisRequest,
+    ResumeMatchRequest,
+    ResumeMatchResponse,
+)
+
+from app.schemas.resume import ResumeTailorRequest
+from app.services.resume.resume_service import (
+    tailor_uploaded_resume,
+)
 
 router = APIRouter(
     prefix="/resume",
@@ -69,7 +80,10 @@ async def ats_analysis(
         )
 
 
-@router.post("/match")
+@router.post(
+    "/match",
+    response_model=ResumeMatchResponse,
+)
 async def resume_match(
     request: ResumeMatchRequest,
 ):
@@ -93,3 +107,30 @@ async def resume_match(
             status_code=500,
             detail=str(e),
         )
+@router.post("/tailor")
+async def tailor_resume_endpoint(
+    request: ResumeTailorRequest,
+):
+    """
+    Tailor the uploaded resume for a Job Description.
+    """
+
+    try:
+
+        return tailor_uploaded_resume(
+            request.job_description
+        )
+
+    except FileNotFoundError:
+
+        raise HTTPException(
+            status_code=404,
+            detail="No uploaded resume found.",
+        )
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )    

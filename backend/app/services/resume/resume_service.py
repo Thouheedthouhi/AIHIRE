@@ -2,7 +2,9 @@ import os
 import shutil
 
 from fastapi import UploadFile
-
+from app.services.resume.tailoring_service import (
+    tailor_resume,
+)
 from app.services.resume.parser_service import extract_resume_text
 from app.services.resume.ats_service import analyze_resume
 from app.services.resume.matcher_service import match_resume
@@ -93,4 +95,24 @@ def analyze_resume_match(
         "status": "success",
         "filename": os.path.basename(latest_resume),
         **analysis,
+    }
+def tailor_uploaded_resume(
+    job_description: str,
+):
+    """
+    Tailor the latest uploaded resume for a Job Description.
+    """
+
+    latest_resume, extracted_text = get_latest_resume_text()
+
+    result = tailor_resume(
+        resume_text=extracted_text,
+        job_description=job_description,
+    )
+
+    return {
+        "filename": os.path.basename(
+            latest_resume
+        ),
+        **result,
     }

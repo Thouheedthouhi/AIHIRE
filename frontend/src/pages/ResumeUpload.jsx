@@ -10,10 +10,11 @@ import ATSScoreCard from "../components/resume/analysis/ATSScoreCard";
 import SkillsCard from "../components/resume/analysis/SkillsCard";
 import MissingKeywords from "../components/resume/analysis/MissingKeywords";
 import ResumeSummary from "../components/resume/analysis/ResumeSummary";
-
+import MatchBreakdown from "../components/resume/analysis/MatchBreakdown";
+import { useNavigate } from "react-router-dom";
 import JobDescriptionCard from "../components/resume/job/JobDescriptionCard";
 import AnalysisTabs from "../components/resume/tabs/AnalysisTabs";
-
+import { tailorResume } from "../services/resume/tailorService";
 import {
   uploadResume,
   analyzeATS,
@@ -22,20 +23,27 @@ import {
 
 function ResumeUpload() {
   const [activeTab, setActiveTab] = useState("ats");
+
   const [file, setFile] = useState(null);
+
   const [analysis, setAnalysis] = useState(null);
 
-  const [jobDescription, setJobDescription] = useState("");
+  const [jobDescription, setJobDescription] =
+    useState("");
 
-  const [targetRole, setTargetRole] = useState(
-    "Software Engineer"
-  );
+  const [targetRole, setTargetRole] =
+    useState("Software Engineer");
+  const [tailoring, setTailoring] = useState(false);
 
   const [loading, setLoading] = useState(false);
-
-  const handleFileSelect = async (selectedFile) => {
+  const navigate = useNavigate();
+  const handleFileSelect = async (
+    selectedFile
+  ) => {
     try {
-      const response = await uploadResume(selectedFile);
+      const response = await uploadResume(
+        selectedFile
+      );
 
       setFile({
         ...response,
@@ -47,7 +55,8 @@ function ResumeUpload() {
       toast.success("Resume uploaded!");
     } catch (error) {
       toast.error(
-        error.response?.data?.detail || "Upload failed."
+        error.response?.data?.detail ||
+        "Upload failed."
       );
     }
   };
@@ -70,7 +79,9 @@ function ResumeUpload() {
 
       setAnalysis(result);
 
-      toast.success("ATS Analysis Complete!");
+      toast.success(
+        "ATS Analysis Complete!"
+      );
     } catch (error) {
       toast.error(
         error.response?.data?.detail ||
@@ -108,6 +119,43 @@ function ResumeUpload() {
       setLoading(false);
     }
   };
+  const handleTailor = async () => {
+  if (!jobDescription.trim()) {
+    toast.error("Paste a Job Description.");
+    return;
+  }
+
+  try {
+    setTailoring(true);
+
+    const result = await tailorResume(
+      jobDescription
+    );
+
+    navigate(
+      "/tailored-resume",
+      {
+        state: result,
+      }
+    );
+
+    toast.success(
+      "Resume Tailored Successfully!"
+    );
+
+  } catch (error) {
+
+    toast.error(
+      error.response?.data?.detail ||
+      "Tailoring failed."
+    );
+
+  } finally {
+
+    setTailoring(false);
+
+  }
+};
 
   return (
     <DashboardLayout>
@@ -119,7 +167,9 @@ function ResumeUpload() {
           </h1>
 
           <p className="mt-2 text-slate-500">
-            Analyze your resume using ATS standards or compare it against a Job Description.
+            Analyze your resume using ATS
+            standards or compare it against a
+            Job Description.
           </p>
         </div>
 
@@ -151,59 +201,143 @@ function ResumeUpload() {
               setTargetRole={setTargetRole}
             />
 
-            {activeTab === "match" && (
-              <JobDescriptionCard
-                value={jobDescription}
-                onChange={setJobDescription}
-                onAnalyze={handleMatch}
-                loading={loading}
-              />
-            )}
+           {activeTab === "match" && (
+  <>
+    <JobDescriptionCard
+      value={jobDescription}
+      onChange={setJobDescription}
+      onAnalyze={handleMatch}
+      loading={loading}
+    />
+
+    {analysis && (
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleTailor}
+          disabled={tailoring}
+          className="
+            rounded-2xl
+            bg-violet-600
+            px-6
+            py-3
+            font-semibold
+            text-white
+            transition
+            hover:bg-violet-700
+            disabled:opacity-60
+          "
+        >
+          {tailoring
+            ? "Tailoring..."
+            : "✨ Tailor Resume"}
+        </button>
+      </div>
+    )}
+  </>
+)}
           </>
         )}
 
-        {analysis && activeTab === "ats" && (
-          <div className="space-y-6">
+        {/* ATS RESULTS */}
 
-            <ATSScoreCard
-              score={analysis.ats_score}
-            />
+        {analysis &&
+          activeTab === "ats" && (
+            <div className="space-y-6">
 
-            <SkillsCard
-              skills={analysis.matched_skills}
-            />
+              <ATSScoreCard
+                score={analysis.ats_score}
+              />
 
-            <MissingKeywords
-              keywords={analysis.missing_keywords}
-            />
+              <SkillsCard
+                title="Detected Skills"
+                subtitle="Technologies identified from your resume"
+                skills={
+                  analysis.matched_skills
+                }
+                color="green"
+              />
 
-            <ResumeSummary
-              summary={analysis.summary}
-              strengths={analysis.strengths}
-              improvements={analysis.improvements}
-            />
+              <MissingKeywords
+                keywords={
+                  analysis.missing_keywords
+                }
+              />
 
-          </div>
-        )}
+              <ResumeSummary
+                overview={analysis.overview}
+                strengths={analysis.strengths}
+                priorityImprovements={analysis.priority_improvements}
+                nextSteps={analysis.next_steps}
+                interviewReadiness={analysis.interview_readiness}
+                motivation={analysis.motivation}
+              />
 
-        {analysis && activeTab === "match" && (
-          <div className="space-y-6">
+            </div>
+          )}
+        {/* RESUME VS JOB DESCRIPTION RESULTS */}
 
-            <ATSScoreCard
-              score={analysis.overall_match}
-              skillMatch={analysis.skill_match}
-            />
+        {analysis &&
+          activeTab === "match" && (
+            <div className="space-y-6">
 
-            <SkillsCard
-              skills={analysis.matched_skills}
-            />
+              <ATSScoreCard
+                score={
+                  analysis.overall_match
+                }
+                skillMatch={
+                  analysis.skill_match
+                }
+              />
 
-            <MissingKeywords
-              keywords={analysis.missing_keywords}
-            />
+              <MatchBreakdown
+                breakdown={
+                  analysis.breakdown
+                }
+              />
 
-          </div>
-        )}
+              <SkillsCard
+                title="Matched Skills"
+                subtitle="Skills matching the Job Description"
+                skills={
+                  analysis.matched_skills
+                }
+                color="blue"
+              />
+
+              <MissingKeywords
+                keywords={
+                  analysis.missing_keywords
+                }
+              />
+
+              {analysis.extra_skills &&
+                analysis.extra_skills.length >
+                0 && (
+                  <SkillsCard
+                    title="Additional Skills"
+                    subtitle="Skills found in your resume but not required by this job"
+                    skills={
+                      analysis.extra_skills
+                    }
+                    color="purple"
+                  />
+                )}
+
+                            <ResumeSummary
+                overview={analysis.overview}
+                strengths={analysis.strengths}
+                priorityImprovements={
+                  analysis.priority_improvements
+                }
+                nextSteps={analysis.next_steps}
+                interviewReadiness={
+                  analysis.interview_readiness
+                }
+                motivation={analysis.motivation}
+              />
+
+            </div>
+          )}
 
       </div>
     </DashboardLayout>

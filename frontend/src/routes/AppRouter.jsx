@@ -8,7 +8,7 @@ import ResumeUpload from "../pages/ResumeUpload";
 import Interview from "../pages/Interview";
 import Report from "../pages/Report";
 import Profile from "../pages/Profile";
-
+import TailoredResume from "../pages/TailoredResume";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 function AppRouter() {
@@ -54,6 +54,11 @@ function AppRouter() {
             <Report />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+        path="/tailored-resume"
+        element={<TailoredResume />}
       />
 
       <Route

@@ -10,7 +10,9 @@ genai.configure(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel(
+    "gemini-2.5-flash"
+)
 
 
 def generate_ai_feedback(
@@ -23,87 +25,140 @@ def generate_ai_feedback(
     job_description: str | None = None,
 ):
     """
-    Generate AI-powered recruiter feedback using Gemini.
+    Generate personalized AI career coaching feedback.
     """
 
     prompt = f"""
-You are a Senior Technical Recruiter, ATS Expert and Career Coach with over 15 years of hiring experience at Google, Microsoft, Amazon and Meta.
+You are an expert Software Engineering Career Coach with over 15 years of experience mentoring students and software engineers into companies like Google, Microsoft, Amazon, Meta and Apple.
 
-Your job is to evaluate this resume exactly like a professional recruiter.
+IMPORTANT
 
-====================================================
+You are NOT a recruiter.
+
+You are NOT evaluating a candidate.
+
+You are coaching the user.
+
+Always speak directly to the user.
+
+Never use phrases like:
+
+- The candidate
+- The applicant
+- Hiring recommendation
+- Recruiter assessment
+- We recommend hiring
+- Suitable candidate
+
+Always use:
+
+- You
+- Your resume
+- Your projects
+- Your skills
+- Your experience
+
+Be encouraging.
+
+Be realistic.
+
+Be constructive.
+
+========================================================
 TARGET ROLE
-====================================================
+========================================================
 
 {target_role}
 
-====================================================
-ATS SCORE
-====================================================
-
-{ats_score}/100
-
-====================================================
-ATS BREAKDOWN
-====================================================
-
-Skills: {breakdown["skills"]}/35
-Projects: {breakdown["projects"]}/15
-Experience: {breakdown["experience"]}/15
-Sections: {breakdown["sections"]}/15
-Formatting: {breakdown["formatting"]}/10
-Contact: {breakdown["contact"]}/10
-
-====================================================
-MATCHED SKILLS
-====================================================
-
-{", ".join(matched_skills)}
-
-====================================================
-MISSING SKILLS
-====================================================
-
-{", ".join(missing_skills)}
-
-====================================================
+========================================================
 JOB DESCRIPTION
-====================================================
+========================================================
 
 {job_description if job_description else "No Job Description Provided"}
 
-====================================================
-FULL EXTRACTED RESUME
-====================================================
+========================================================
+ATS / MATCH SCORE
+========================================================
+
+{ats_score}/100
+
+========================================================
+SCORE BREAKDOWN
+========================================================
+
+Skills: {breakdown["skills"]}
+
+Projects: {breakdown["projects"]}
+
+Experience: {breakdown["experience"]}
+
+Sections: {breakdown["sections"]}
+
+Formatting: {breakdown["formatting"]}
+
+Contact: {breakdown["contact"]}
+
+========================================================
+MATCHED SKILLS
+========================================================
+
+{", ".join(matched_skills)}
+
+========================================================
+MISSING SKILLS
+========================================================
+
+{", ".join(missing_skills)}
+
+========================================================
+FULL RESUME
+========================================================
 
 {resume_text}
 
-====================================================
+========================================================
 
-Instructions:
+TASK
 
-1. Read the COMPLETE resume carefully.
-2. If a Job Description is provided, compare the resume against it.
-3. Evaluate the resume specifically for the target role.
-4. Never invent projects, experience or skills.
-5. Mention strong projects if present.
-6. Mention internship/work experience if present.
-7. Mention missing ATS keywords.
-8. Mention weak bullet points if any.
-9. Mention if achievements are not quantified.
-10. Mention if project descriptions lack impact.
-11. Mention formatting issues only if obvious.
-12. Give recruiter-level suggestions.
-13. Be honest and concise.
-14. Keep the summary below 120 words.
-15. Do NOT repeat the ATS score.
+Analyze the entire resume.
+
+If a Job Description exists,
+compare against it.
+
+Give practical coaching.
+
+Mention:
+
+• strengths
+
+• missing technologies
+
+• missing backend/frontend concepts
+
+• project quality
+
+• ATS issues
+
+• impact of projects
+
+• quantified achievements
+
+• experience level
+
+• education relevance
+
+• resume quality
+
+Focus on helping the user get interviews.
+
+========================================================
 
 Return ONLY valid JSON.
 
 {{
-    "summary": "",
+    "overview":"",
 
-    "strengths": [
+    "strengths":[
         "",
         "",
         "",
@@ -111,18 +166,97 @@ Return ONLY valid JSON.
         ""
     ],
 
-    "improvements": [
-        "",
-        "",
+    "priority_improvements":{{
+        "high":[
+            "",
+            "",
+            ""
+        ],
+        "medium":[
+            "",
+            ""
+        ],
+        "low":[
+            ""
+        ]
+    }},
+
+    "next_steps":[
         "",
         "",
         ""
     ],
 
-    "overall_assessment": "",
+    "interview_readiness":"",
 
-    "hiring_recommendation": ""
+    "motivation":""
 }}
+
+Rules
+
+overview
+
+- 3 to 5 sentences.
+
+- Explain why your resume matches or doesn't match.
+
+- Speak directly to the user.
+
+strengths
+
+- Specific to this resume.
+
+- Mention projects.
+
+- Mention technologies.
+
+priority_improvements
+
+High
+
+- Biggest improvements.
+
+Medium
+
+- Helpful improvements.
+
+Low
+
+- Nice-to-have improvements.
+
+next_steps
+
+Concrete actions the user should take next.
+
+Examples
+
+- Build one FastAPI project.
+
+- Learn Docker.
+
+- Improve quantified achievements.
+
+interview_readiness
+
+Return ONLY one value
+
+Excellent
+
+Strong
+
+Moderate
+
+Needs Improvement
+
+motivation
+
+End with a positive message.
+
+Encourage the user.
+
+Never sound negative.
+
+Return ONLY JSON.
 """
 
     try:
@@ -131,7 +265,6 @@ Return ONLY valid JSON.
 
         text = response.text.strip()
 
-        # Remove markdown if Gemini wraps JSON
         text = (
             text.replace("```json", "")
             .replace("```", "")
@@ -142,47 +275,68 @@ Return ONLY valid JSON.
 
         return {
 
-            "summary": feedback.get(
-                "summary",
-                ""
+            "overview": feedback.get(
+                "overview",
+                "",
             ),
 
             "strengths": feedback.get(
                 "strengths",
-                []
+                [],
             ),
 
-            "improvements": feedback.get(
-                "improvements",
-                []
+            "priority_improvements": feedback.get(
+                "priority_improvements",
+                {
+                    "high": [],
+                    "medium": [],
+                    "low": [],
+                },
             ),
 
-            "overall_assessment": feedback.get(
-                "overall_assessment",
-                ""
+            "next_steps": feedback.get(
+                "next_steps",
+                [],
             ),
 
-            "hiring_recommendation": feedback.get(
-                "hiring_recommendation",
-                ""
+            "interview_readiness": feedback.get(
+                "interview_readiness",
+                "Moderate",
+            ),
+
+            "motivation": feedback.get(
+                "motivation",
+                "",
             ),
 
         }
 
     except Exception as e:
+     import traceback
 
-        print("Gemini Error:", e)
+     print("\n================ GEMINI ERROR ================\n")
+     traceback.print_exc()
 
-        return {
+     if "response" in locals():
+       try:
+            print("\nRAW GEMINI RESPONSE:\n")
+            print(response.text)
+       except Exception:
+            pass
 
-            "summary": "AI feedback could not be generated at this time.",
+     print("\nERROR:")
+     print(e)
+     print("\n==============================================\n")
 
-            "strengths": [],
-
-            "improvements": [],
-
-            "overall_assessment": "",
-
-            "hiring_recommendation": "Unable to determine.",
-
-        }
+     return {
+        "overview": "AI feedback could not be generated.",
+        "strengths": [],
+        "priority_improvements": {
+            "high": [],
+            "medium": [],
+            "low": [],
+        },
+        "next_steps": [],
+        "interview_readiness": "Moderate",
+        "motivation": "",
+    }
