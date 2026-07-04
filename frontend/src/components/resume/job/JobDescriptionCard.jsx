@@ -61,25 +61,7 @@ function JobDescriptionCard({
           {value.length} characters
         </p>
 
-        <button
-          onClick={onAnalyze}
-          disabled={loading || !value.trim()}
-          className="
-            rounded-xl
-            bg-blue-600
-            px-6
-            py-3
-            font-medium
-            text-white
-            transition
-            hover:bg-blue-700
-            disabled:cursor-not-allowed
-            disabled:opacity-50
-          "
-        >
-          {loading ? "Analyzing..." : "Analyze Match"}
-        </button>
-
+       
       </div>
 
     </div>

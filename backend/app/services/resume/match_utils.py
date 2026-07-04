@@ -3,152 +3,234 @@ import re
 from app.services.resume.skills import (
     ALL_SKILLS,
     SKILL_ALIASES,
-    EDUCATION_KEYWORDS,
-    EXPERIENCE_KEYWORDS,
-    PROJECT_KEYWORDS,
+    ROLE_SKILLS,
 )
 
 
-def contains_keyword(
-    text: str,
-    keyword: str,
-):
+# ----------------------------------------------------
+# Helper Functions
+# ----------------------------------------------------
+
+def contains_keyword(text: str, keyword: str):
     pattern = rf"\b{re.escape(keyword.lower())}\b"
-    return re.search(
-        pattern,
-        text.lower(),
-    ) is not None
+    return re.search(pattern, text.lower()) is not None
 
 
-def has_skill(
-    text: str,
-    skill: str,
-):
-    """
-    Check if a skill or any of its aliases
-    exists in text.
-    """
-
+def has_skill(text: str, skill: str):
     aliases = SKILL_ALIASES.get(
         skill,
         [skill.lower()],
     )
 
     for alias in aliases:
-
-        if contains_keyword(
-            text,
-            alias,
-        ):
+        if contains_keyword(text, alias):
             return True
 
     return False
 
 
-def extract_skills(
-    text: str,
-):
-    """
-    Extract all skills found in text.
-    """
+# ----------------------------------------------------
+# Skill Extraction
+# ----------------------------------------------------
 
+def extract_skills(text: str):
     detected = []
 
     for skill in ALL_SKILLS:
-
-        if has_skill(
-            text,
-            skill,
-        ):
+        if has_skill(text, skill):
             detected.append(skill)
 
     return sorted(detected)
 
 
+# ----------------------------------------------------
+# Education Score (0–15)
+# ----------------------------------------------------
+
 def education_score(
     resume_text: str,
     jd_text: str,
 ):
-    """
-    Education matching.
-    """
+    resume = resume_text.lower()
 
     score = 0
 
-    for keyword in EDUCATION_KEYWORDS:
+    # Degree
 
-        if (
-            contains_keyword(
-                jd_text,
-                keyword,
-            )
-            and contains_keyword(
-                resume_text,
-                keyword,
-            )
-        ):
-            score += 2
+    degree_keywords = [
+        "bachelor",
+        "b.e",
+        "be",
+        "b.tech",
+        "btech",
+        "engineering",
+    ]
 
-    return min(score, 10)
+    if any(word in resume for word in degree_keywords):
+        score += 8
 
+    # Branch
+
+    branch_keywords = [
+        "computer science",
+        "cse",
+        "information science",
+        "ise",
+        "software engineering",
+        "artificial intelligence",
+        "data science",
+    ]
+
+    if any(word in resume for word in branch_keywords):
+        score += 4
+
+    # CGPA / Percentage
+
+    if (
+        "cgpa" in resume
+        or "%"
+        in resume
+    ):
+        score += 3
+
+    return min(score, 15)
+
+
+# ----------------------------------------------------
+# Experience Score (0–15)
+# ----------------------------------------------------
 
 def experience_score(
     resume_text: str,
     jd_text: str,
 ):
-    """
-    Experience matching.
-    """
+    resume = resume_text.lower()
 
     score = 0
 
-    for keyword in EXPERIENCE_KEYWORDS:
+    if "internship" in resume:
+        score += 8
 
-        if (
-            contains_keyword(
-                jd_text,
-                keyword,
-            )
-            and contains_keyword(
-                resume_text,
-                keyword,
-            )
-        ):
-            score += 3
+    if "experience" in resume:
+        score += 4
 
-    return min(score, 20)
+    if "freelance" in resume:
+        score += 2
 
+    if "research" in resume:
+        score += 2
+
+    if "open source" in resume:
+        score += 2
+
+    if "lead" in resume:
+        score += 1
+
+    return min(score, 15)
+
+
+# ----------------------------------------------------
+# Project Score (0–15)
+# ----------------------------------------------------
 
 def project_score(
     resume_text: str,
 ):
-    """
-    Project relevance score.
-    """
+    text = resume_text.lower()
 
-    count = 0
+    project_mentions = text.count("project")
 
-    for keyword in PROJECT_KEYWORDS:
+    score = 0
 
-        count += len(
-            re.findall(
-                rf"\b{re.escape(keyword.lower())}\b",
-                resume_text.lower(),
-            )
-        )
+    if project_mentions >= 3:
+        score = 10
 
-    return min(
-        count,
-        10,
+    elif project_mentions == 2:
+        score = 8
+
+    elif project_mentions == 1:
+        score = 5
+
+    # Bonus for quality projects
+
+    project_keywords = [
+        "react",
+        "node",
+        "python",
+        "java",
+        "mongodb",
+        "sql",
+        "docker",
+        "api",
+        "fastapi",
+        "machine learning",
+        "ai",
+    ]
+
+    for keyword in project_keywords:
+
+        if keyword in text:
+            score += 1
+
+    return min(score, 15)
+
+
+# ----------------------------------------------------
+# Responsibilities Score (0–10)
+# ----------------------------------------------------
+
+def responsibility_score(
+    resume_text: str,
+    job_description: str,
+):
+    resume = resume_text.lower()
+    jd = job_description.lower()
+
+    responsibilities = [
+        "develop",
+        "design",
+        "implement",
+        "build",
+        "deploy",
+        "maintain",
+        "optimize",
+        "debug",
+        "test",
+        "collaborate",
+        "integrate",
+        "analyze",
+        "review",
+        "monitor",
+        "document",
+    ]
+
+    matched = 0
+    total = 0
+
+    for responsibility in responsibilities:
+
+        if responsibility in jd:
+
+            total += 1
+
+            if responsibility in resume:
+                matched += 1
+
+    if total == 0:
+        return 10
+
+    return round(
+        matched / total * 10
     )
 
 
+# ----------------------------------------------------
+# Keyword Extraction
+# ----------------------------------------------------
 
-def extract_keywords(text: str):
-    """
-    Extract meaningful words from text.
-    """
-
+def extract_keywords(
+    text: str,
+):
     words = re.findall(
         r"[A-Za-z][A-Za-z+#.]{2,}",
         text.lower(),
@@ -178,6 +260,10 @@ def extract_keywords(text: str):
         "years",
         "year",
         "good",
+        "candidate",
+        "company",
+        "required",
+        "preferred",
     }
 
     return {
@@ -187,14 +273,14 @@ def extract_keywords(text: str):
     }
 
 
+# ----------------------------------------------------
+# Keyword Match Score (0–10)
+# ----------------------------------------------------
+
 def keyword_match_score(
     resume_text: str,
     jd_text: str,
 ):
-    """
-    Returns keyword coverage score (0–10).
-    """
-
     resume_keywords = extract_keywords(
         resume_text
     )
@@ -211,69 +297,24 @@ def keyword_match_score(
         & jd_keywords
     )
 
-    return round(
+    percentage = (
         len(matched)
         / len(jd_keywords)
-        * 10
     )
-def responsibility_score(
-    resume_text: str,
-    job_description: str,
-):
-    """
-    Compare responsibilities in the resume and JD.
-    Returns a score out of 10.
-    """
-
-    resume = resume_text.lower()
-    jd = job_description.lower()
-
-    responsibilities = [
-        "develop",
-        "design",
-        "implement",
-        "build",
-        "deploy",
-        "maintain",
-        "optimize",
-        "debug",
-        "test",
-        "collaborate",
-        "integrate",
-        "analyze",
-        "document",
-        "review",
-        "monitor",
-    ]
-
-    matched = 0
-    total = 0
-
-    for responsibility in responsibilities:
-
-        if responsibility in jd:
-            total += 1
-
-            if responsibility in resume:
-                matched += 1
-
-    if total == 0:
-        return 10
 
     return round(
-        matched / total * 10
+        percentage * 10
     )
-from app.services.resume.skills import ROLE_SKILLS
 
+
+# ----------------------------------------------------
+# Weighted Skill Matching
+# ----------------------------------------------------
 
 def weighted_skill_match(
     resume_skills: list,
     jd_skills: list,
 ):
-    """
-    Calculate weighted skill matching.
-    """
-
     weights = {}
 
     for role in ROLE_SKILLS.values():
@@ -295,15 +336,21 @@ def weighted_skill_match(
         total_weight += weight
 
         if skill in resume_skills:
+
             matched.append(skill)
+
             matched_weight += weight
+
         else:
+
             missing.append(skill)
 
     if total_weight == 0:
+
         percentage = 100
 
     else:
+
         percentage = round(
             matched_weight
             / total_weight

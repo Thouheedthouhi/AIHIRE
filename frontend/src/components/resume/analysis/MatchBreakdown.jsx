@@ -2,10 +2,10 @@ function MatchBreakdown({ breakdown }) {
   if (!breakdown) return null;
 
   const items = [
-    ["Skills", breakdown.skills, 40],
-    ["Experience", breakdown.experience, 20],
-    ["Education", breakdown.education, 10],
-    ["Projects", breakdown.projects, 10],
+    ["Skills", breakdown.skills, 35],
+    ["Experience", breakdown.experience, 15],
+    ["Education", breakdown.education, 15],
+    ["Projects", breakdown.projects, 15],
     ["Responsibilities", breakdown.responsibilities, 10],
     ["Keywords", breakdown.keywords, 10],
   ];
@@ -17,26 +17,33 @@ function MatchBreakdown({ breakdown }) {
       </h2>
 
       <div className="space-y-5">
-        {items.map(([label, score, total]) => (
-          <div key={label}>
-            <div className="mb-2 flex justify-between">
-              <span>{label}</span>
+        {items.map(([label, score, total]) => {
+          const percentage = Math.min(
+            (score / total) * 100,
+            100
+          );
 
-              <span className="font-semibold">
-                {score}/{total}
-              </span>
-            </div>
+          return (
+            <div key={label}>
+              <div className="mb-2 flex justify-between">
+                <span>{label}</span>
 
-            <div className="h-3 rounded-full bg-slate-200">
-              <div
-                className="h-3 rounded-full bg-blue-600"
-                style={{
-                  width: `${(score / total) * 100}%`,
-                }}
-              />
+                <span className="font-semibold">
+                  {score}/{total}
+                </span>
+              </div>
+
+              <div className="h-3 rounded-full bg-slate-200">
+                <div
+                  className="h-3 rounded-full bg-blue-600 transition-all duration-500"
+                  style={{
+                    width: `${percentage}%`,
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

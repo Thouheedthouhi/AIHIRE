@@ -16,14 +16,15 @@ def match_resume(
     job_description: str,
 ):
     """
-    Professional Resume vs Job Description matching.
+    Professional Resume vs Job Description Matching.
+    Optimized for students, freshers and early-career professionals.
     """
 
     resume_lower = resume_text.lower()
     jd_lower = job_description.lower()
 
     # -------------------------------------
-    # Skills
+    # Skills (35 Marks)
     # -------------------------------------
 
     resume_skills = extract_skills(
@@ -50,13 +51,12 @@ def match_resume(
         )
     )
 
-    # 40 Marks
     skills_score = round(
-        skill_match * 0.40
+        skill_match * 35 / 100
     )
 
     # -------------------------------------
-    # Education
+    # Education (15 Marks)
     # -------------------------------------
 
     education = education_score(
@@ -65,7 +65,7 @@ def match_resume(
     )
 
     # -------------------------------------
-    # Experience
+    # Experience (15 Marks)
     # -------------------------------------
 
     experience = experience_score(
@@ -74,7 +74,7 @@ def match_resume(
     )
 
     # -------------------------------------
-    # Projects
+    # Projects (15 Marks)
     # -------------------------------------
 
     projects = project_score(
@@ -82,7 +82,7 @@ def match_resume(
     )
 
     # -------------------------------------
-    # Responsibilities
+    # Responsibilities (10 Marks)
     # -------------------------------------
 
     responsibilities = responsibility_score(
@@ -91,7 +91,7 @@ def match_resume(
     )
 
     # -------------------------------------
-    # Keyword Coverage
+    # Keyword Coverage (10 Marks)
     # -------------------------------------
 
     keyword_score = keyword_match_score(
@@ -103,18 +103,22 @@ def match_resume(
     # Overall Score
     # -------------------------------------
 
-    overall_match = min(
+    overall_match = (
         skills_score
         + education
         + experience
         + projects
         + responsibilities
-        + keyword_score,
+        + keyword_score
+    )
+
+    overall_match = min(
+        round(overall_match),
         100,
     )
 
     # -------------------------------------
-    # Gemini Feedback
+    # AI Feedback
     # -------------------------------------
 
     feedback = generate_ai_feedback(
@@ -139,7 +143,9 @@ def match_resume(
     # -------------------------------------
 
     return {
+
         "overall_match": overall_match,
+
         "skill_match": skill_match,
 
         "matched_skills": sorted(
@@ -155,13 +161,21 @@ def match_resume(
         ),
 
         "breakdown": {
+
             "skills": skills_score,
-            "experience": experience,
+
             "education": education,
+
+            "experience": experience,
+
             "projects": projects,
+
             "responsibilities": responsibilities,
+
             "keywords": keyword_score,
+
         },
 
         **feedback,
+
     }
