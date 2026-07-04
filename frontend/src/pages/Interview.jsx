@@ -1,5 +1,14 @@
+import DashboardLayout from "../components/dashboard/layout/DashboardLayout";
+import InterviewSetup from "../components/interview/InterviewSetup";
+
 function Interview() {
-  return <h1>Interview Page</h1>;
+  return (
+    <DashboardLayout>
+      <div className="mx-auto max-w-6xl py-8">
+        <InterviewSetup />
+      </div>
+    </DashboardLayout>
+  );
 }
 
 export default Interview;

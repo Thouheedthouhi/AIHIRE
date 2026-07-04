@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.routers.interview import router as interview_router
 from app.database.database import database
 from app.routers.auth import router as auth_router
 from app.routers.resume import router as resume_router
@@ -41,8 +41,10 @@ app.add_middleware(
 )
 
 # Routers
+# Routers
 app.include_router(auth_router)
 app.include_router(resume_router)
+app.include_router(interview_router)
 
 
 @app.get("/")

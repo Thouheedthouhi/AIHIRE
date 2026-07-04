@@ -10,7 +10,7 @@ import Report from "../pages/Report";
 import Profile from "../pages/Profile";
 import TailoredResume from "../pages/TailoredResume";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
-
+import InterviewSession from "../pages/InterviewSession";
 function AppRouter() {
   return (
     <Routes>
@@ -68,6 +68,10 @@ function AppRouter() {
             <Profile />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/interview/session"
+        element={<InterviewSession />}
       />
     </Routes>
   );

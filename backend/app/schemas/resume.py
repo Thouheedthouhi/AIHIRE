@@ -29,7 +29,10 @@ class PriorityImprovements(BaseModel):
     medium: list[str]
     low: list[str]
 
+class ResumeTailorRequest(BaseModel):
+    job_description: str    
 
+    
 class ResumeMatchResponse(BaseModel):
     overall_match: int
     skill_match: int
@@ -52,5 +55,3 @@ class ResumeMatchResponse(BaseModel):
 
     motivation: str
 
-class ResumeTailorRequest(BaseModel):
-    job_description: str    
