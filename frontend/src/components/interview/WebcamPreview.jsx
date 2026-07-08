@@ -1,20 +1,40 @@
+import {
+  initializeFaceMesh,
+  detectFace,
+} from "../../services/vision/faceMesh";
+import behaviorTracker from "../../services/vision/behaviorTracker";
+import {
+  extractFeatures,
+} from "../../services/vision/featureExtractor";
+
+
+
+
 import { useEffect, useRef, useState } from "react";
-import { Camera, CameraOff } from "lucide-react";
+import {
+  Camera,
+  CameraOff,
+  ScanFace,
+} from "lucide-react";
 
 function WebcamPreview() {
+  
   const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   const [cameraReady, setCameraReady] =
     useState(false);
 
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
-    let stream;
+    let mounted = true;
 
-    async function startCamera() {
+    async function initializeCamera() {
       try {
-        stream =
+        behaviorTracker.reset();
+        const stream =
           await navigator.mediaDevices.getUserMedia({
             video: {
               width: 1280,
@@ -24,47 +44,150 @@ function WebcamPreview() {
             audio: false,
           });
 
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (!mounted) {
+          stream
+            .getTracks()
+            .forEach((track) => track.stop());
+          return;
         }
+
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+  videoRef.current.srcObject = stream;
+
+  try {
+    await videoRef.current.play();
+
+    // -------------------------
+    // Initialize MediaPipe
+    // -------------------------
+
+    await initializeFaceMesh();
+
+    console.log("✅ FaceMesh Loaded");
+
+   const detect = async () => {
+  if (!mounted || !videoRef.current) {
+    return;
+  }
+
+  // Wait until the video is ready
+  if (videoRef.current.readyState < 2) {
+    requestAnimationFrame(detect);
+    return;
+  }
+
+  const results = await detectFace(
+    videoRef.current
+  );
+
+  if (
+    results.faceLandmarks &&
+    results.faceLandmarks.length > 0
+  ) {
+   const features = extractFeatures({
+  landmarks: results.faceLandmarks[0],
+
+  blendshapes: results.faceBlendshapes[0],
+
+  matrix:
+    results
+      .facialTransformationMatrixes[0],
+});
+
+// Update behavior statistics
+if (features) {
+  behaviorTracker.update(features);
+
+  console.table(features);
+  console.table(
+    behaviorTracker.getSummary()
+  );
+}}
+
+  requestAnimationFrame(detect);
+};
+
+detect();
+
+  } catch (err) {
+    console.warn(
+      "Video play interrupted:",
+      err
+    );
+  }
+}
 
         setCameraReady(true);
       } catch (err) {
-        console.error(err);
+        console.error("Camera Error:", err);
 
         setError(
-          "Unable to access webcam. Please allow camera permission."
+          `${err.name}: ${err.message}`
         );
+
+        setCameraReady(false);
       }
     }
 
-    startCamera();
+    initializeCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) =>
-          track.stop()
-        );
+      mounted = false;
+      behaviorTracker.reset();
+
+      setCameraReady(false);
+
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      }
+
+      if (streamRef.current) {
+        streamRef.current
+          .getTracks()
+          .forEach((track) => {
+            track.stop();
+          });
+
+        streamRef.current = null;
       }
     };
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
 
-      <div className="flex items-center justify-between border-b p-5">
+      {/* Header */}
+
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
 
         <div className="flex items-center gap-3">
 
           {cameraReady ? (
-            <Camera className="text-emerald-600" />
+            <Camera
+              className="text-emerald-600"
+              size={22}
+            />
           ) : (
-            <CameraOff className="text-red-500" />
+            <CameraOff
+              className="text-red-500"
+              size={22}
+            />
           )}
 
-          <h2 className="text-lg font-bold">
-            Live Camera
-          </h2>
+          <div>
+
+            <h2 className="font-bold">
+              Live Camera
+            </h2>
+
+            <p className="text-sm text-slate-500">
+              Behaviour Analysis
+            </p>
+
+          </div>
 
         </div>
 
@@ -76,16 +199,18 @@ function WebcamPreview() {
           }`}
         >
           {cameraReady
-            ? "Active"
-            : "Offline"}
+            ? "LIVE"
+            : "OFFLINE"}
         </span>
 
       </div>
 
-      <div className="relative bg-black">
+      {/* Camera */}
+
+      <div className="relative flex-1 overflow-hidden bg-black">
 
         {error ? (
-          <div className="flex h-[420px] items-center justify-center p-8 text-center text-red-500">
+          <div className="flex h-full items-center justify-center p-8 text-center text-white">
             {error}
           </div>
         ) : (
@@ -94,15 +219,31 @@ function WebcamPreview() {
             autoPlay
             playsInline
             muted
-            className="h-[420px] w-full object-cover"
+            className="h-full w-full object-cover"
           />
         )}
 
         {cameraReady && (
-          <div className="absolute bottom-4 left-4 rounded-full bg-black/70 px-4 py-2 text-sm font-medium text-white">
-            ● Live
+          <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">
+
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
+
+            LIVE
+
           </div>
         )}
+
+        <div className="absolute bottom-5 left-5 rounded-xl bg-black/60 px-4 py-2 text-sm text-white">
+          AIHire
+        </div>
+
+        <div className="absolute bottom-5 right-5 flex items-center gap-2 rounded-xl bg-black/60 px-4 py-2 text-sm text-white">
+
+          <ScanFace size={18} />
+
+          Face Detection
+
+        </div>
 
       </div>
 

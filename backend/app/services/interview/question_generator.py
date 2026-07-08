@@ -1,13 +1,20 @@
 import json
-import os
+import re
 
-from dotenv import load_dotenv
 import google.generativeai as genai
 
-load_dotenv()
+from app.core.config import settings
+
+from app.services.interview.resume_service import (
+    get_resume_context,
+)
+
+from app.services.interview.prompt_builder import (
+    build_interview_prompt,
+)
 
 genai.configure(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=settings.GEMINI_API_KEY
 )
 
 model = genai.GenerativeModel(
@@ -15,54 +22,86 @@ model = genai.GenerativeModel(
 )
 
 
+def _parse_questions(response_text: str):
+    """
+    Parse Gemini response safely.
+    """
+
+    try:
+        return json.loads(response_text)
+
+    except Exception:
+        pass
+
+    cleaned = re.sub(
+        r"```json|```",
+        "",
+        response_text,
+    ).strip()
+
+    try:
+        return json.loads(cleaned)
+
+    except Exception:
+        pass
+
+    questions = []
+
+    for line in cleaned.split("\n"):
+        line = line.strip()
+
+        if not line:
+            continue
+
+        line = re.sub(
+            r"^\d+[\).\s-]*",
+            "",
+            line,
+        )
+
+        line = line.lstrip("-•").strip()
+
+        if line:
+            questions.append(line)
+
+    return questions
+
+
 def generate_questions(
-    resume_text: str,
-    target_role: str,
-    interview_type: str,
+    role: str,
     difficulty: str,
+    interview_type: str,
+    question_count: int,
 ):
-    prompt = f"""
-You are a Senior Technical Interviewer.
+    """
+    Generate interview questions primarily
+    from the uploaded resume.
+    """
 
-Generate between 5 and 8 interview questions.
+    resume_text = get_resume_context()
 
-Rules:
+    if not resume_text:
+        resume_text = (
+            "No resume uploaded."
+        )
 
-1. 60% Resume based
-2. 30% Role based
-3. 10% HR
-
-Role:
-{target_role}
-
-Interview Type:
-{interview_type}
-
-Difficulty:
-{difficulty}
-
-Resume:
-
-{resume_text}
-
-Return ONLY a JSON array.
-
-Example:
-
-[
-"Tell me about yourself.",
-"Explain your AI Resume Analyzer project.",
-"What challenges did you face while developing your project?"
-]
-"""
-
-    response = model.generate_content(prompt)
-
-    text = (
-        response.text
-        .replace("```json", "")
-        .replace("```", "")
-        .strip()
+    prompt = build_interview_prompt(
+        resume_text=resume_text,
+        role=role,
+        difficulty=difficulty,
+        interview_type=interview_type,
+        question_count=question_count,
     )
 
-    return json.loads(text)
+    response = model.generate_content(
+        prompt
+    )
+
+    questions = _parse_questions(
+        response.text
+    )
+
+    if len(questions) > question_count:
+        questions = questions[:question_count]
+
+    return questions

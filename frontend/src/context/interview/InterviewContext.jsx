@@ -23,39 +23,50 @@ export function InterviewProvider({ children }) {
   // --------------------------
 
   const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] =
+    useState(0);
 
   // --------------------------
   // Interview State
   // --------------------------
 
-  const [interviewState, setInterviewState] = useState(
-    InterviewState.AI_SPEAKING
-  );
+  const [interviewState, setInterviewState] =
+    useState(InterviewState.AI_SPEAKING);
 
   // --------------------------
   // Timer
   // --------------------------
 
-  const [timeLeft, setTimeLeft] = useState(90);
+  const [timeLeft, setTimeLeft] =
+    useState(90);
 
   // --------------------------
   // AI Status
   // --------------------------
 
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSpeaking, setIsSpeaking] =
+    useState(false);
 
   // --------------------------
   // Recording
   // --------------------------
 
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, setIsRecording] =
+    useState(false);
+
+  // --------------------------
+  // Submission Lock
+  // --------------------------
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   // --------------------------
   // Camera & Microphone
   // --------------------------
 
-  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraReady, setCameraReady] =
+    useState(false);
 
   const [microphoneReady, setMicrophoneReady] =
     useState(false);
@@ -93,6 +104,10 @@ export function InterviewProvider({ children }) {
     // Recording
     isRecording,
     setIsRecording,
+
+    // Submission Lock
+    isSubmitting,
+    setIsSubmitting,
 
     // Camera
     cameraReady,

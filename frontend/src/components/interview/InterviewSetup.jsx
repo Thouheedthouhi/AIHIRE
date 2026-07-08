@@ -4,19 +4,26 @@ import { useNavigate } from "react-router-dom";
 
 import { startInterview } from "../../services/interview/interviewService";
 
-import DifficultySelector from "./DifficultySelector";
-import InterviewTypeCard from "./InterviewTypeCard";
+import InterviewModeSelector from "./setup/InterviewModeSelector";
+import AIInterviewSetup from "./setup/AIInterviewSetup";
+import CustomInterviewSetup from "./setup/CustomInterviewSetup";
 
 function InterviewSetup() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState("Software Engineer");
-  const [difficulty, setDifficulty] = useState("Medium");
-  const [type, setType] = useState("Mixed");
-
+  const [mode, setMode] = useState("ai");
   const [loading, setLoading] = useState(false);
 
-  const handleStart = async () => {
+  // -----------------------------
+  // AI Interview
+  // -----------------------------
+
+  const handleAIInterview = async ({
+    role,
+    difficulty,
+    interviewType,
+    questionCount,
+  }) => {
     try {
       setLoading(true);
 
@@ -27,124 +34,173 @@ function InterviewSetup() {
       });
 
       const response = await startInterview({
+        mode: "ai",
         target_role: role,
-        interview_type: type,
         difficulty,
+        interview_type: interviewType,
+        question_count: questionCount,
       });
 
       navigate("/interview/session", {
-        state: response,
+        state: {
+          ...response,
+          role,
+          difficulty,
+          interviewType,
+        },
       });
     } catch (error) {
       console.error(error);
 
-      alert(
-        "Please allow webcam and microphone access before starting the interview."
-      );
+      // Camera / Microphone permission
+      if (
+        error.name === "NotAllowedError" ||
+        error.name === "NotFoundError"
+      ) {
+        alert(
+          "Please allow webcam and microphone permissions."
+        );
+      }
+
+      // Backend errors (Gemini, FastAPI, etc.)
+      else if (error.response) {
+        alert(
+          error.response.data.detail ||
+            "Backend Error"
+        );
+      }
+
+      // Unknown errors
+      else {
+        alert(
+          error.message ||
+            "Something went wrong."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -----------------------------
+  // Custom Interview
+  // -----------------------------
+
+  const handleCustomInterview = async ({
+    questions,
+  }) => {
+    try {
+      setLoading(true);
+
+      await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+
+      navigate("/interview/session", {
+        state: {
+          questions,
+          role: "Custom Interview",
+          difficulty: "Custom",
+          interviewType: "Custom",
+        },
+      });
+    } catch (error) {
+      console.error(error);
+
+      if (
+        error.name === "NotAllowedError" ||
+        error.name === "NotFoundError"
+      ) {
+        alert(
+          "Please allow webcam and microphone permissions."
+        );
+      } else {
+        alert(
+          error.response?.data?.detail ||
+            error.message ||
+            "Something went wrong."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+    <div className="mx-auto max-w-6xl">
       {/* Header */}
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">
+      <div className="mb-10 text-center">
+        <h1 className="text-4xl font-bold text-slate-900">
           AI Mock Interview
         </h1>
 
-        <p className="mt-2 text-slate-500">
-          Practice personalized interview questions generated from your resume.
+        <p className="mt-3 text-lg text-slate-500">
+          Practice interviews with AI-generated or custom questions.
         </p>
       </div>
 
-      {/* Target Role */}
+      {/* Interview Mode */}
 
-      <div className="mb-8">
-        <label className="mb-2 block font-medium text-slate-700">
-          Target Role
-        </label>
-
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="w-full rounded-xl border border-slate-300 p-3 focus:border-violet-500 focus:outline-none"
-        >
-          <option>Software Engineer</option>
-          <option>Frontend Developer</option>
-          <option>Backend Developer</option>
-          <option>Full Stack Developer</option>
-          <option>Machine Learning Engineer</option>
-          <option>Data Analyst</option>
-          <option>DevOps Engineer</option>
-        </select>
-      </div>
-
-      {/* Interview Type */}
-
-      <InterviewTypeCard
-        value={type}
-        onChange={setType}
+      <InterviewModeSelector
+        value={mode}
+        onChange={setMode}
       />
 
-      {/* Difficulty */}
+      {/* Setup */}
 
-      <div className="mt-8">
-        <DifficultySelector
-          value={difficulty}
-          onChange={setDifficulty}
+      {mode === "ai" ? (
+        <AIInterviewSetup
+          onStart={handleAIInterview}
         />
-      </div>
+      ) : (
+        <CustomInterviewSetup
+          onStart={handleCustomInterview}
+        />
+      )}
 
       {/* Permissions */}
 
-      <div className="mt-10 grid gap-4 md:grid-cols-2">
-        <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-5">
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
+        <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-md">
           <div className="rounded-xl bg-violet-100 p-3">
             <Video className="text-violet-600" />
           </div>
 
           <div>
             <h3 className="font-semibold">
-              Webcam
+              Webcam Required
             </h3>
 
             <p className="text-sm text-slate-500">
-              Required for facial behavior analysis.
+              Used for behaviour analysis.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-5">
+        <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-md">
           <div className="rounded-xl bg-violet-100 p-3">
             <Mic className="text-violet-600" />
           </div>
 
           <div>
             <h3 className="font-semibold">
-              Microphone
+              Microphone Required
             </h3>
 
             <p className="text-sm text-slate-500">
-              Required for speech analysis.
+              Used for speech recording.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Start Button */}
-
-      <button
-        onClick={handleStart}
-        disabled={loading}
-        className="mt-10 w-full rounded-2xl bg-violet-600 py-4 text-lg font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {loading
-          ? "Generating Interview..."
-          : "Start Interview"}
-      </button>
+      {loading && (
+        <div className="mt-8 rounded-2xl bg-violet-600 p-5 text-center font-semibold text-white shadow-lg">
+          Preparing your interview...
+        </div>
+      )}
     </div>
   );
 }

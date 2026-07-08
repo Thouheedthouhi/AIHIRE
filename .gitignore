@@ -24,3 +24,6 @@ uploads/
 
 # Logs
 *.log
+
+# Dataset
+backend/ml/dataset/

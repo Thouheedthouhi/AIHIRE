@@ -10,10 +10,21 @@ export function isSpeechSupported() {
 }
 
 /**
- * Stop current speech
+ * Stop current speech safely
  */
 export function stopSpeaking() {
-  window.speechSynthesis.cancel();
+  if (!isSpeechSupported()) return;
+
+  try {
+    if (
+      window.speechSynthesis.speaking ||
+      window.speechSynthesis.pending
+    ) {
+      window.speechSynthesis.cancel();
+    }
+  } catch (error) {
+    console.error(error);
+  }
 
   currentUtterance = null;
 }
@@ -21,6 +32,7 @@ export function stopSpeaking() {
 /**
  * Speak text
  */
+
 export function speak(
   text,
   {
@@ -33,15 +45,24 @@ export function speak(
   } = {}
 ) {
   if (!isSpeechSupported()) {
-    onError?.("Speech synthesis not supported.");
+    onError?.(
+      new Error(
+        "Speech synthesis not supported."
+      )
+    );
     return;
   }
 
-  stopSpeaking();
+  // Cancel ONLY if something is already speaking
+  if (
+    window.speechSynthesis.speaking ||
+    window.speechSynthesis.pending
+  ) {
+    window.speechSynthesis.cancel();
+  }
 
-  const utterance = new SpeechSynthesisUtterance(
-    text
-  );
+  const utterance =
+    new SpeechSynthesisUtterance(text);
 
   currentUtterance = utterance;
 
@@ -49,39 +70,74 @@ export function speak(
   utterance.pitch = pitch;
   utterance.volume = volume;
 
-  // Choose best English voice if available
+  const assignVoice = () => {
+    const voices =
+      window.speechSynthesis.getVoices();
+
+    const preferredVoice =
+      voices.find(
+        (voice) =>
+          voice.lang.startsWith("en") &&
+          voice.localService
+      ) ||
+      voices.find((voice) =>
+        voice.lang.startsWith("en")
+      ) ||
+      voices[0];
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onstart = () => {
+      onStart?.();
+    };
+
+    utterance.onend = () => {
+      currentUtterance = null;
+      onEnd?.();
+    };
+
+    utterance.onerror = (event) => {
+      console.error(
+        "Speech Error:",
+        event
+      );
+
+      currentUtterance = null;
+
+      // Ignore cancellation errors caused by browser cleanup
+      if (event.error === "canceled") {
+        return;
+      }
+
+      onError?.(event);
+    };
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+  };
+
   const voices =
     window.speechSynthesis.getVoices();
 
-  const preferredVoice =
-    voices.find((voice) =>
-      voice.lang.startsWith("en")
-    ) || voices[0];
-
-  if (preferredVoice) {
-    utterance.voice = preferredVoice;
+  if (voices.length > 0) {
+    assignVoice();
+  } else {
+    window.speechSynthesis.onvoiceschanged =
+      () => {
+        assignVoice();
+      };
   }
-
-  utterance.onstart = () => {
-    onStart?.();
-  };
-
-  utterance.onend = () => {
-    currentUtterance = null;
-    onEnd?.();
-  };
-
-  utterance.onerror = (event) => {
-    currentUtterance = null;
-    onError?.(event);
-  };
-
-  window.speechSynthesis.speak(utterance);
 }
 
 /**
- * Replay
+ * Replay current text
  */
-export function replay(text, callbacks = {}) {
+export function replay(
+  text,
+  callbacks = {}
+) {
   speak(text, callbacks);
 }

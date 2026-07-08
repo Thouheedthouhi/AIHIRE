@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import {
   useInterviewContext,
@@ -10,88 +10,88 @@ import {
   stopSpeaking,
 } from "../utils/speech";
 
-export default function useInterview() {
+import {
+  startRecording,
+  stopRecording,
+} from "../utils/recorder";
+
+import {
+  startTimer,
+  stopTimer,
+} from "../utils/timer";
+
+import {
+  uploadInterviewAudio,
+} from "../services/interview/interviewService";
+
+export default function useInterview(role) {
   const {
-    questions,
-    currentIndex,
-    setCurrentIndex,
+  questions,
+  currentIndex,
+  setCurrentIndex,
 
-    interviewState,
-    setInterviewState,
+  interviewState,
+  setInterviewState,
 
-    timeLeft,
-    setTimeLeft,
+  timeLeft,
+  setTimeLeft,
 
-    isSpeaking,
-    setIsSpeaking,
+  isSpeaking,
+  setIsSpeaking,
 
-    isRecording,
-    setIsRecording,
-  } = useInterviewContext();
+  isRecording,
+  setIsRecording,
 
-  const timerRef = useRef(null);
+  isSubmitting,
+  setIsSubmitting,
+} = useInterviewContext();
 
   const currentQuestion =
     questions[currentIndex] || "";
 
-  // --------------------------
-  // Start Timer
-  // --------------------------
+  // ---------------------------------
+  // Begin Answer Phase
+  // ---------------------------------
 
-  const startTimer = () => {
-    clearInterval(timerRef.current);
+  const beginAnswerPhase = async () => {
+    stopSpeaking();
 
-    setTimeLeft(90);
+    setIsSpeaking(false);
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
+    setInterviewState(
+      InterviewState.ANSWERING
+    );
 
-          finishAnswer();
+    try {
+      await startRecording();
 
-          return 0;
-        }
+      setIsRecording(true);
+    } catch (error) {
+      console.error(
+        "Recording failed:",
+        error
+      );
+    }
 
-        return prev - 1;
-      });
-    }, 1000);
+    startTimer(
+      90,
+      (remaining) => {
+        setTimeLeft(remaining);
+      },
+      () => {
+        finishAnswer();
+      }
+    );
   };
 
-  // --------------------------
-  // Stop Timer
-  // --------------------------
-
-  const stopTimer = () => {
-    clearInterval(timerRef.current);
-  };
-
-  // --------------------------
-  // Start Recording
-  // --------------------------
-
-  const startRecording = () => {
-    setIsRecording(true);
-
-    console.log("🎤 Recording Started");
-  };
-
-  // --------------------------
-  // Stop Recording
-  // --------------------------
-
-  const stopRecording = () => {
-    setIsRecording(false);
-
-    console.log("🛑 Recording Stopped");
-  };
-
-  // --------------------------
+  // ---------------------------------
   // Ask Question
-  // --------------------------
+  // ---------------------------------
 
   const askQuestion = () => {
     if (!currentQuestion) return;
+
+    stopTimer();
 
     setInterviewState(
       InterviewState.AI_SPEAKING
@@ -99,98 +99,181 @@ export default function useInterview() {
 
     setIsSpeaking(true);
 
+    let finished = false;
+
     speak(currentQuestion, {
-      onEnd: () => {
-        setIsSpeaking(false);
+      onStart: () => {
+        setIsSpeaking(true);
+      },
 
-        setInterviewState(
-          InterviewState.ANSWERING
-        );
+      onEnd: async () => {
+        if (finished) return;
 
-        startRecording();
+        finished = true;
 
-        startTimer();
+        await beginAnswerPhase();
+      },
+
+      onError: async (error) => {
+        console.error(error);
+
+        if (finished) return;
+
+        finished = true;
+
+        await beginAnswerPhase();
       },
     });
+
+    // Safari fallback
+
+    const estimatedDuration = Math.max(
+      4000,
+      currentQuestion.split(" ").length * 450
+    );
+
+    setTimeout(async () => {
+      if (finished) return;
+
+      finished = true;
+
+      await beginAnswerPhase();
+    }, estimatedDuration);
   };
 
-  // --------------------------
-  // Finish Current Answer
-  // --------------------------
+  // ---------------------------------
+  // Finish Answer
+  // ---------------------------------
 
-  const finishAnswer = () => {
-    stopTimer();
+  const finishAnswer = async () => {
+  // Prevent double-clicks
+  if (isSubmitting) {
+    return;
+  }
 
-    stopRecording();
+  setIsSubmitting(true);
+
+  stopSpeaking();
+  stopTimer();
+
+
+
+    let audioBlob = null;
+
+    if (isRecording) {
+      try {
+        audioBlob =
+          await stopRecording();
+
+        setIsRecording(false);
+
+        if (audioBlob) {
+          const result =
+            await uploadInterviewAudio({
+              audioBlob,
+              question: currentQuestion,
+              role,
+            });
+
+          console.log(
+            "Transcript:",
+            result.transcript
+          );
+
+          console.log(
+            "Evaluation:",
+            result.evaluation
+          );
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
     setInterviewState(
       InterviewState.SAVING
     );
 
     setTimeout(() => {
-      if (
-        currentIndex <
-        questions.length - 1
-      ) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        setInterviewState(
-          InterviewState.PROCESSING
-        );
-      }
-    }, 800);
+  if (
+    currentIndex <
+    questions.length - 1
+  ) {
+    setCurrentIndex((prev) => prev + 1);
+  } else {
+    setInterviewState(
+      InterviewState.PROCESSING
+    );
+  }
+
+  // Unlock after navigation
+  setIsSubmitting(false);
+}, 700);
   };
 
-  // --------------------------
-  // Replay Question
-  // --------------------------
+  // ---------------------------------
+  // Replay
+  // ---------------------------------
 
   const replayQuestion = () => {
-    stopSpeaking();
+    if (
+      interviewState ===
+      InterviewState.AI_SPEAKING
+    ) {
+      return;
+    }
 
     askQuestion();
   };
 
-  // --------------------------
-  // Question Change
-  // --------------------------
+  // ---------------------------------
+  // Auto Ask
+  // ---------------------------------
 
   useEffect(() => {
     if (
-      questions.length &&
-      interviewState !==
-        InterviewState.PROCESSING
+      questions.length === 0
     ) {
-      askQuestion();
+      return;
     }
 
-    return () => {
-      stopSpeaking();
+    if (
+      interviewState ===
+      InterviewState.PROCESSING
+    ) {
+      return;
+    }
 
-      clearInterval(timerRef.current);
+    askQuestion();
+
+    return () => {
+      
+      stopTimer();
     };
-  }, [currentIndex]);
+  }, [currentIndex, questions.length]);
 
   return {
-    currentQuestion,
+  currentQuestion,
 
-    currentIndex,
+  currentIndex,
 
-    totalQuestions:
-      questions.length,
+  totalQuestions:
+    questions.length,
 
-    interviewState,
+  interviewState,
 
-    isSpeaking,
+  timeLeft,
 
-    isRecording,
+  isSpeaking,
 
-    timeLeft,
+  isRecording,
 
-    askQuestion,
+  isSubmitting,
 
-    replayQuestion,
+  askQuestion,
 
-    finishAnswer,
-  };
+  replayQuestion,
+
+  finishAnswer,
+};
 }
