@@ -74,10 +74,9 @@ class VideoProcessor:
             data=rgb,
         )
 
-         timestamp = int(
-            cap.get(cv2.CAP_PROP_POS_MSEC)
-        )
+         timestamp = frame_index * 33
 
+         
          result = self.detector.detect_for_video(
             mp_image,
             timestamp,

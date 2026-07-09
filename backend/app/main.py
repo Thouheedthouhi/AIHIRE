@@ -6,7 +6,7 @@ from app.routers.interview import router as interview_router
 from app.database.database import database
 from app.routers.auth import router as auth_router
 from app.routers.resume import router as resume_router
-
+from app.routers import behavior
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,7 +45,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(resume_router)
 app.include_router(interview_router)
-
+app.include_router(behavior.router)
 
 @app.get("/")
 def root():

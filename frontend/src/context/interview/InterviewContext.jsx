@@ -22,7 +22,9 @@ export function InterviewProvider({ children }) {
   // Questions
   // --------------------------
 
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] =
+    useState([]);
+
   const [currentIndex, setCurrentIndex] =
     useState(0);
 
@@ -30,8 +32,12 @@ export function InterviewProvider({ children }) {
   // Interview State
   // --------------------------
 
-  const [interviewState, setInterviewState] =
-    useState(InterviewState.AI_SPEAKING);
+  const [
+    interviewState,
+    setInterviewState,
+  ] = useState(
+    InterviewState.AI_SPEAKING
+  );
 
   // --------------------------
   // Timer
@@ -51,35 +57,56 @@ export function InterviewProvider({ children }) {
   // Recording
   // --------------------------
 
-  const [isRecording, setIsRecording] =
-    useState(false);
+  const [
+    isRecording,
+    setIsRecording,
+  ] = useState(false);
 
   // --------------------------
   // Submission Lock
   // --------------------------
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false);
 
   // --------------------------
   // Camera & Microphone
   // --------------------------
 
-  const [cameraReady, setCameraReady] =
-    useState(false);
+  const [
+    cameraReady,
+    setCameraReady,
+  ] = useState(false);
 
-  const [microphoneReady, setMicrophoneReady] =
-    useState(false);
+  const [
+    microphoneReady,
+    setMicrophoneReady,
+  ] = useState(false);
 
-  const [faceDetected, setFaceDetected] =
-    useState(false);
+  const [
+    faceDetected,
+    setFaceDetected,
+  ] = useState(false);
 
   // --------------------------
   // Interview Data
   // --------------------------
 
-  const [transcripts, setTranscripts] =
-    useState([]);
+  const [
+    transcripts,
+    setTranscripts,
+  ] = useState([]);
+
+  // --------------------------
+  // Behavior Prediction
+  // --------------------------
+
+  const [
+    behaviorPrediction,
+    setBehaviorPrediction,
+  ] = useState(null);
 
   const value = {
     // Questions
@@ -122,6 +149,10 @@ export function InterviewProvider({ children }) {
     // Transcript
     transcripts,
     setTranscripts,
+
+    // Behavior
+    behaviorPrediction,
+    setBehaviorPrediction,
   };
 
   return (
@@ -132,7 +163,8 @@ export function InterviewProvider({ children }) {
 }
 
 export function useInterviewContext() {
-  const context = useContext(InterviewContext);
+  const context =
+    useContext(InterviewContext);
 
   if (!context) {
     throw new Error(
