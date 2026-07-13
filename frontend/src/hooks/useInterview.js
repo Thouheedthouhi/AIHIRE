@@ -24,27 +24,40 @@ import {
   uploadInterviewAudio,
 } from "../services/interview/interviewService";
 
+import { generateFinalReport } from "../services/interview/reportService";
+
+import { useNavigate } from "react-router-dom";
+
 export default function useInterview(role) {
+  const navigate = useNavigate();
   const {
-  questions,
-  currentIndex,
-  setCurrentIndex,
+    questions,
+    currentIndex,
+    setCurrentIndex,
 
-  interviewState,
-  setInterviewState,
+    interviewState,
+    setInterviewState,
 
-  timeLeft,
-  setTimeLeft,
+    timeLeft,
+    setTimeLeft,
 
-  isSpeaking,
-  setIsSpeaking,
+    isSpeaking,
+    setIsSpeaking,
 
-  isRecording,
-  setIsRecording,
+    isRecording,
+    setIsRecording,
 
-  isSubmitting,
-  setIsSubmitting,
-} = useInterviewContext();
+    isSubmitting,
+    setIsSubmitting,
+
+    transcripts,
+    setTranscripts,
+
+    behaviorPrediction,
+
+    finalReport,
+    setFinalReport,
+  } = useInterviewContext();
 
   const currentQuestion =
     questions[currentIndex] || "";
@@ -146,15 +159,15 @@ export default function useInterview(role) {
   // ---------------------------------
 
   const finishAnswer = async () => {
-  // Prevent double-clicks
-  if (isSubmitting) {
-    return;
-  }
+    // Prevent double-clicks
+    if (isSubmitting) {
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  stopSpeaking();
-  stopTimer();
+    stopSpeaking();
+    stopTimer();
 
 
 
@@ -175,15 +188,16 @@ export default function useInterview(role) {
               role,
             });
 
-          console.log(
-            "Transcript:",
-            result.transcript
-          );
+          setTranscripts((previous) => [
+            ...previous,
+            {
+              question: currentQuestion,
 
-          console.log(
-            "Evaluation:",
-            result.evaluation
-          );
+              transcript: result.transcript,
+
+              evaluation: result.evaluation,
+            },
+          ]);
         }
       } catch (error) {
         console.error(error);
@@ -194,20 +208,81 @@ export default function useInterview(role) {
       InterviewState.SAVING
     );
 
-    setTimeout(() => {
+    setTimeout(async () => {
+
+  // --------------------------
+  // Next Question
+  // --------------------------
+
   if (
     currentIndex <
     questions.length - 1
   ) {
-    setCurrentIndex((prev) => prev + 1);
-  } else {
-    setInterviewState(
-      InterviewState.PROCESSING
+
+    setCurrentIndex(
+      (prev) => prev + 1
     );
+
+    setIsSubmitting(false);
+
+    return;
   }
 
-  // Unlock after navigation
+  // --------------------------
+  // Interview Finished
+  // --------------------------
+
+  setInterviewState(
+    InterviewState.PROCESSING
+  );
+
+  try {
+
+    const report =
+      await generateFinalReport({
+
+        role,
+
+        resume_analysis:
+          "Resume analyzed successfully.",
+
+        questions,
+
+        answers:
+          transcripts.map(
+            (t) => t.transcript
+          ),
+
+        behavior:
+          behaviorPrediction || {
+
+            engagement: 0,
+
+            boredom: 0,
+
+            confusion: 0,
+
+            frustration: 0,
+
+          },
+
+      });
+
+    setFinalReport(report);
+
+    navigate("/report");
+
+  } catch (error) {
+
+    console.error(
+      "Failed to generate report",
+      error
+    );
+
+  }
+
   setIsSubmitting(false);
+
 }, 700);
   };
 
@@ -247,33 +322,33 @@ export default function useInterview(role) {
     askQuestion();
 
     return () => {
-      
+
       stopTimer();
     };
   }, [currentIndex, questions.length]);
 
   return {
-  currentQuestion,
+    currentQuestion,
 
-  currentIndex,
+    currentIndex,
 
-  totalQuestions:
-    questions.length,
+    totalQuestions:
+      questions.length,
 
-  interviewState,
+    interviewState,
 
-  timeLeft,
+    timeLeft,
 
-  isSpeaking,
+    isSpeaking,
 
-  isRecording,
+    isRecording,
 
-  isSubmitting,
+    isSubmitting,
 
-  askQuestion,
+    askQuestion,
 
-  replayQuestion,
+    replayQuestion,
 
-  finishAnswer,
-};
+    finishAnswer,
+  };
 }

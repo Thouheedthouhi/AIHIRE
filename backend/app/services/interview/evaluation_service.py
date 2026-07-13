@@ -9,9 +9,7 @@ genai.configure(
     api_key=settings.GEMINI_API_KEY
 )
 
-model = genai.GenerativeModel(
-    "gemini-2.5-flash"
-)
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 def _parse_json(response_text: str):

@@ -5,7 +5,6 @@ import {
 } from "react";
 
 const InterviewContext = createContext();
-
 /**
  * Interview State Machine
  */
@@ -108,6 +107,20 @@ export function InterviewProvider({ children }) {
     setBehaviorPrediction,
   ] = useState(null);
 
+  const [
+  behaviorSummary,
+  setBehaviorSummary,
+] = useState(null);
+
+  // --------------------------
+  // Final Report
+  // --------------------------
+
+  const [
+    finalReport,
+    setFinalReport,
+  ] = useState(null);
+
   const value = {
     // Questions
     questions,
@@ -153,6 +166,14 @@ export function InterviewProvider({ children }) {
     // Behavior
     behaviorPrediction,
     setBehaviorPrediction,
+
+
+    behaviorSummary,
+    setBehaviorSummary,
+
+    // Final Report
+    finalReport,
+    setFinalReport,
   };
 
   return (

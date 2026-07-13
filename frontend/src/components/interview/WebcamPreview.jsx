@@ -42,6 +42,7 @@ function WebcamPreview() {
     useState("");
   const {
     setBehaviorPrediction,
+    setBehaviorSummary,
   } = useInterviewContext();
 
   useEffect(() => {
@@ -157,13 +158,9 @@ function WebcamPreview() {
                     const summary =
                       behaviorTracker.getSummary();
 
-                    console.table(
-                      features
-                    );
+                    setBehaviorSummary(summary);
 
-                    console.table(
-                      summary
-                    );
+                    console.table(summary);
 
                     const now =
                       Date.now();
@@ -189,7 +186,7 @@ function WebcamPreview() {
 
                         console.clear();
 
-                       
+
 
 
                       } catch (err) {
@@ -319,8 +316,8 @@ function WebcamPreview() {
 
         <span
           className={`rounded-full px-3 py-1 text-sm font-semibold ${cameraReady
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-red-100 text-red-700"
+            ? "bg-emerald-100 text-emerald-700"
+            : "bg-red-100 text-red-700"
             }`}
         >
           {cameraReady
