@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-#from app.routers import history
+from app.routers import history
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.interview import router as interview_router
@@ -8,6 +8,7 @@ from app.routers.auth import router as auth_router
 from app.routers.resume import router as resume_router
 from app.routers import behavior
 from app.routers import report
+from app.routers import dashboard
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -47,7 +48,8 @@ app.include_router(resume_router)
 app.include_router(interview_router)
 app.include_router(behavior.router)
 app.include_router(report.router)
-#app.include_router(history.router)
+app.include_router(history.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 def root():

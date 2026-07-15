@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-
+import InterviewHistory from "../pages/InterviewHistory";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
@@ -57,6 +57,15 @@ function AppRouter() {
       />
 
       <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <InterviewHistory />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/tailored-resume"
         element={<TailoredResume />}
       />
@@ -74,6 +83,7 @@ function AppRouter() {
         element={<InterviewSession />}
       />
     </Routes>
+
   );
 }
 

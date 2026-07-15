@@ -7,9 +7,9 @@ import {
   TrendingUp,
   UserCheck,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import { useInterviewContext } from "../context/interview/InterviewContext";
-
+import { downloadInterviewReport } from "../services/pdf/reportPdfService";
 function behaviorLevel(value) {
   switch (value) {
     case 0:
@@ -70,6 +70,7 @@ function ScoreCard({
 }
 
 function Report() {
+  const navigate = useNavigate();
   const {
     finalReport,
     behaviorSummary,
@@ -439,18 +440,26 @@ function Report() {
 
         <div className="mt-10 flex flex-wrap gap-5">
 
-          <button className="flex items-center gap-3 rounded-xl bg-indigo-600 px-8 py-4 font-semibold text-white transition hover:bg-indigo-700">
-
+          <button
+            onClick={() =>
+              downloadInterviewReport({
+                ...finalReport,
+                behaviorSummary,
+                behaviorPrediction,
+              })
+            }
+            className="flex items-center gap-3 rounded-xl bg-indigo-600 px-8 py-4 font-semibold text-white transition hover:bg-indigo-700"
+          >
             <Download size={20} />
 
             Download Report
-
           </button>
 
-          <button className="rounded-xl border border-slate-300 bg-white px-8 py-4 font-semibold transition hover:bg-slate-100">
-
+          <button
+            onClick={() => navigate("/history")}
+            className="rounded-xl border-2 border-blue-600 px-6 py-3 font-semibold text-blue-600 hover:bg-blue-600 hover:text-white transition"
+          >
             View Interview History
-
           </button>
 
         </div>
