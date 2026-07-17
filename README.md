@@ -171,79 +171,74 @@ After every interview AIHire generates a detailed report containing:
 
 ## 🏠 Landing Page
 
-> Add: `screenshots/home.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 34 16 PM" src="https://github.com/user-attachments/assets/76cc6b09-0ca9-4cbe-bde0-6edb08673b8a" />
+
 
 ---
 
 ## 🔐 Authentication
 
-> Add: `screenshots/login.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 35 09 PM" src="https://github.com/user-attachments/assets/1234ce1a-84a5-4374-823d-4e153484afa6" />
+
 
 ---
 
 ## 📊 Dashboard
 
-> Add: `screenshots/dashboard.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 34 52 PM" src="https://github.com/user-attachments/assets/0b29fd17-48f0-41a8-9fc0-7edba19bb9d4" />
+
 
 ---
 
 ## 📄 Resume Upload
 
-> Add: `screenshots/resume-upload.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 35 19 PM" src="https://github.com/user-attachments/assets/44e388b2-d675-4ef9-a8c4-656fb9eed705" />
+
 
 ---
 
 ## 📈 Resume Analysis
 
-> Add: `screenshots/resume-analysis.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 39 05 PM" src="https://github.com/user-attachments/assets/0a4b6857-4099-43f1-95da-621c8b51282f" />
 
----
-
-## 🎯 Resume vs Job Description
-
-> Add: `screenshots/resume-match.png`
-
----
-
-## 🪄 Resume Tailoring
-
-> Add: `screenshots/resume-tailor.png`
 
 ---
 
 ## 🎤 Interview Setup
 
-> Add: `screenshots/interview-setup.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 40 10 PM" src="https://github.com/user-attachments/assets/173db15e-6e0e-42b3-8222-5ab26c1b0aca" />
+
+<img width="1440" height="791" alt="Screenshot 2026-07-17 at 8 39 28 PM" src="https://github.com/user-attachments/assets/ca7d1cf9-51bf-49e7-a968-ca9794712b2b" />
+
+
 
 ---
 
 ## 🎥 Live Interview
 
-> Add: `screenshots/interview.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 41 11 PM" src="https://github.com/user-attachments/assets/81a1a198-ee5c-4d89-a734-a77fd4d74fdf" />
+
 
 ---
 
 ## 😊 Behavioral Detection
 
-> Add: `screenshots/behavior.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 42 02 PM" src="https://github.com/user-attachments/assets/d5b42625-03f8-42fa-ae4b-4c5bfbc67ebc" />
+
 
 ---
 
 ## 📑 Interview Report
 
-> Add: `screenshots/report.png`
+<img width="1418" height="815" alt="Screenshot 2026-07-09 at 9 35 59 PM" src="https://github.com/user-attachments/assets/2db9b7e2-8b80-4ccd-bd05-e0021a84f64c" />
 
----
-
-## 📚 Interview History
-
-> Add: `screenshots/history.png`
 
 ---
 
 ## 👤 User Profile
 
-> Add: `screenshots/profile.png`
+<img width="1440" height="789" alt="Screenshot 2026-07-17 at 8 56 28 PM" src="https://github.com/user-attachments/assets/a096b36c-1a4a-40b4-8910-c5dee8d68914" />
+
 
 ---
 
