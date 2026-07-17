@@ -15,11 +15,11 @@ class BehaviorService:
         model_dir = base_dir / "ml" / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
 
-        model_path = model_dir / "behavior_model.pkl"
-        feature_path = model_dir / "feature_columns.pkl"
+        self.model_path = model_dir / "behavior_model.pkl"
+        self.feature_path = model_dir / "feature_columns.pkl"
 
         # Download behavior model if it doesn't exist
-        if not model_path.exists():
+        if not self.model_path.exists():
 
             print("Downloading behavior model from Google Drive...")
 
@@ -32,24 +32,37 @@ class BehaviorService:
 
             gdown.download(
                 id=file_id,
-                output=str(model_path),
+                output=str(self.model_path),
                 quiet=False,
             )
 
         # Check feature columns file
-        if not feature_path.exists():
+        if not self.feature_path.exists():
             raise RuntimeError(
                 "feature_columns.pkl not found. Please add it to the repository."
             )
 
-        print("Loading behavior model...")
+        # Lazy loading
+        self.model = None
+        self.feature_columns = None
 
-        self.model = joblib.load(model_path)
-        self.feature_columns = joblib.load(feature_path)
+        print("BehaviorService initialized.")
 
-        print("Behavior model loaded successfully.")
+    def load_model(self):
+
+        if self.model is None:
+
+            print("Loading behavior model...")
+
+            self.model = joblib.load(self.model_path)
+            self.feature_columns = joblib.load(self.feature_path)
+
+            print("Behavior model loaded successfully.")
 
     def predict(self, features: dict):
+
+        # Load model only on first prediction
+        self.load_model()
 
         df = pd.DataFrame(
             [[
