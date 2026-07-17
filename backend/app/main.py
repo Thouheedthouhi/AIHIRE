@@ -9,6 +9,8 @@ from app.routers.resume import router as resume_router
 from app.routers import behavior
 from app.routers import report
 from app.routers import dashboard
+from app.routers import profile
+from app.routers.accounts import router as account_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -50,6 +52,8 @@ app.include_router(behavior.router)
 app.include_router(report.router)
 app.include_router(history.router)
 app.include_router(dashboard.router)
+app.include_router(profile.router)
+app.include_router(account_router)
 
 @app.get("/")
 def root():

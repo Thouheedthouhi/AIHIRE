@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+from fastapi import HTTPException, status
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -19,7 +20,10 @@ def verify_password(password: str, hashed_password: str):
     return pwd_context.verify(password, hashed_password)
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(
+    data: dict,
+    expires_delta: timedelta | None = None,
+):
     to_encode = data.copy()
 
     if expires_delta:
@@ -34,3 +38,19 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
+
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        return payload
+
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )

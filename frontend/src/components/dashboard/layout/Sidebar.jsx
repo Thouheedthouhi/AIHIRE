@@ -4,7 +4,6 @@ import {
   Mic,
   BarChart3,
   User,
-  Settings,
   LogOut,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -36,11 +35,7 @@ const menuItems = [
     icon: User,
     path: "/profile",
   },
-  {
-    name: "Settings",
-    icon: Settings,
-    path: "/settings",
-  },
+  
 ];
 
 function Sidebar() {

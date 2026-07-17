@@ -1,13 +1,11 @@
-import axios from "axios";
-
-const API = "http://127.0.0.1:8000/history";
+import api from "../api";
 
 export async function getHistory() {
-  const response = await axios.get(API);
+  const response = await api.get("/history");
   return response.data;
 }
 
 export async function getHistoryReport(id) {
-  const response = await axios.get(`${API}/${id}`);
+  const response = await api.get(`/history/${id}`);
   return response.data;
 }

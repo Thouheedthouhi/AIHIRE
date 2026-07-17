@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.core.dependencies import get_current_user
 from app.services.dashboard.dashboard_service import (
     DashboardService,
 )
@@ -13,6 +14,7 @@ service = DashboardService()
 
 
 @router.get("/stats")
-async def dashboard_stats():
-
+async def dashboard_stats(
+    current_user=Depends(get_current_user),
+):
     return await service.get_stats()

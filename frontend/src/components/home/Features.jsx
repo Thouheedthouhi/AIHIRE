@@ -48,7 +48,10 @@ const features = [
 
 function Features() {
   return (
-    <section className="bg-white py-24 px-6">
+    <section
+      id="features"
+      className="bg-white py-24 px-6"
+    >
       <div className="max-w-7xl mx-auto">
 
         <div className="text-center">
@@ -57,8 +60,8 @@ function Features() {
           </h2>
 
           <p className="mt-5 max-w-2xl mx-auto text-lg text-slate-600">
-            Build confidence, improve your interview skills, and prepare
-            smarter with personalized feedback.
+            Build confidence, improve your interview skills,
+            and prepare smarter with personalized feedback.
           </p>
         </div>
 
@@ -89,6 +92,7 @@ function Features() {
             );
           })}
         </div>
+
       </div>
     </section>
   );

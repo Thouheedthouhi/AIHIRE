@@ -1,17 +1,12 @@
-import axios from "axios";
-
-const API =
-  "http://localhost:8000/interview";
+import api from "../api";
 
 // --------------------------------------
 // Start Interview
 // --------------------------------------
 
-export async function startInterview(
-  data
-) {
-  const response = await axios.post(
-    `${API}/start`,
+export async function startInterview(data) {
+  const response = await api.post(
+    "/interview/start",
     data
   );
 
@@ -45,8 +40,8 @@ export async function uploadInterviewAudio({
     role
   );
 
-  const response = await axios.post(
-    `${API}/upload-audio`,
+  const response = await api.post(
+    "/interview/upload-audio",
     formData,
     {
       headers: {

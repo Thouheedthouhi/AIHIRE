@@ -1,10 +1,8 @@
-import axios from "axios";
-
-const API = "http://localhost:8000";
+import api from "../api";
 
 export async function predictBehavior(summary) {
-  const response = await axios.post(
-    `${API}/behavior/predict`,
+  const response = await api.post(
+    "/behavior/predict",
     {
       blinkCount: summary.blinkCount,
       eyeContact: Number(summary.eyeContact),

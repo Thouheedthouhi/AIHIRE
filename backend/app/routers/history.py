@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from bson import ObjectId
 
+from app.core.dependencies import get_current_user
 from app.database.database import database
 
 router = APIRouter(
@@ -10,12 +11,15 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_history():
-
+async def get_history(
+    current_user=Depends(get_current_user),
+):
     cursor = (
         database.interview_reports
         .find(
-            {},
+            {
+                "userId": str(current_user["_id"]),
+            },
             {
                 "overallScore": 1,
                 "technicalScore": 1,
@@ -30,7 +34,6 @@ async def get_history():
     interviews = []
 
     async for interview in cursor:
-
         interviews.append(
             {
                 "id": str(interview["_id"]),
@@ -54,11 +57,14 @@ async def get_history():
 
 
 @router.get("/{report_id}")
-async def get_report(report_id: str):
-
+async def get_report(
+    report_id: str,
+    current_user=Depends(get_current_user),
+):
     report = await database.interview_reports.find_one(
         {
-            "_id": ObjectId(report_id)
+            "_id": ObjectId(report_id),
+            "userId": str(current_user["_id"]),
         }
     )
 

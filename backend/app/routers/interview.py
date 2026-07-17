@@ -1,9 +1,12 @@
 from fastapi import (
     APIRouter,
+    Depends,
     File,
     Form,
     UploadFile,
 )
+
+from app.core.dependencies import get_current_user
 
 from app.schemas.interview import (
     InterviewStartRequest,
@@ -38,6 +41,7 @@ router = APIRouter(
 @router.post("/start")
 async def start_interview(
     request: InterviewStartRequest,
+    current_user=Depends(get_current_user),
 ):
     # -----------------------------
     # Custom Interview
@@ -70,6 +74,7 @@ async def start_interview(
 
 @router.post("/upload-audio")
 async def upload_audio(
+    current_user=Depends(get_current_user),
     audio: UploadFile = File(...),
     question: str = Form(...),
     role: str = Form(...),
@@ -81,9 +86,7 @@ async def upload_audio(
     and return the result.
     """
 
-    result = await save_audio_and_transcribe(
-        audio
-    )
+    result = await save_audio_and_transcribe(audio)
 
     transcript = result["transcript"]
 
