@@ -11,13 +11,9 @@ genai.configure(api_key=settings.GEMINI_API_KEY)
 class FinalReportService:
 
     def __init__(self):
-
         self.model = genai.GenerativeModel("gemini-2.5-flash")
 
-    def generate_report(
-        self,
-        request,
-    ):
+    def generate_report(self, request):
 
         prompt = f"""
 You are an expert technical interview coach.
@@ -44,71 +40,51 @@ Behavior Prediction:
 
 Return ONLY valid JSON.
 
-Use this exact schema:
+Schema:
 
 {{
-    "overallScore": integer (0-100),
-
-    "technicalScore": integer,
-
-    "communicationScore": integer,
-
-    "interviewPresence": integer,
-
-    "resumeAlignment": integer,
-
-    "strengths": [
-        "...",
-        "...",
-        "..."
-    ],
-
-    "improvements": [
-        "...",
-        "...",
-        "..."
-    ],
-
-    "summary": "...",
-
-    "interviewReadiness": "..."
+  "overallScore": 0,
+  "technicalScore": 0,
+  "communicationScore": 0,
+  "interviewPresence": 0,
+  "resumeAlignment": 0,
+  "strengths": [],
+  "improvements": [],
+  "summary": "",
+  "interviewReadiness": ""
 }}
-
-Guidelines:
-
-- This report is for the candidate, NOT the interviewer.
-- Give constructive and encouraging feedback.
-- Do not mention hiring or rejection.
-- Focus on learning and improvement.
-- Return JSON only.
 """
 
-        response = self.model.generate_content(
-            prompt
-        )
+        try:
+            response = self.model.generate_content(prompt)
 
-        text = response.text.strip()
+            if not response:
+                raise Exception("Gemini returned no response")
 
-        if text.startswith("```json"):
-            text = (
-                text.replace(
-                    "```json",
-                    "",
-                )
-                .replace(
-                    "```",
-                    "",
-                )
-                .strip()
-            )
+            if not hasattr(response, "text"):
+                raise Exception(f"Gemini response has no text: {response}")
 
-        elif text.startswith("```"):
-            text = (
-                text.replace(
-                    "```",
-                    "",
-                )
-                .strip()
-            )
+            text = response.text.strip()
 
-        return json.loads(text)
+            print("\n========= GEMINI RESPONSE =========")
+            print(text)
+            print("===================================\n")
+
+            if text.startswith("```json"):
+                text = text.replace("```json", "").replace("```", "").strip()
+
+            elif text.startswith("```"):
+                text = text.replace("```", "").strip()
+
+            report = json.loads(text)
+
+            return report
+
+        except json.JSONDecodeError as e:
+            print("JSON Decode Error")
+            print(text)
+            raise Exception(f"Gemini returned invalid JSON: {e}")
+
+        except Exception as e:
+            print("Gemini Error:", e)
+            raise

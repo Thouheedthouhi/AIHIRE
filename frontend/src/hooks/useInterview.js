@@ -159,132 +159,93 @@ export default function useInterview(role) {
   // ---------------------------------
 
   const finishAnswer = async () => {
-    // Prevent double-clicks
-    if (isSubmitting) {
+  if (isSubmitting) return;
+
+  setIsSubmitting(true);
+
+  stopSpeaking();
+  stopTimer();
+
+  let updatedTranscripts = [...transcripts];
+
+  if (isRecording) {
+    try {
+      const audioBlob = await stopRecording();
+
+      setIsRecording(false);
+
+      if (audioBlob) {
+        const result = await uploadInterviewAudio({
+          audioBlob,
+          question: currentQuestion,
+          role,
+        });
+
+        const newTranscript = {
+          question: currentQuestion,
+          transcript: result.transcript,
+          evaluation: result.evaluation,
+        };
+
+        updatedTranscripts = [
+          ...updatedTranscripts,
+          newTranscript,
+        ];
+
+        setTranscripts(updatedTranscripts);
+      }
+    } catch (error) {
+      console.error("Audio Upload Error:", error);
+    }
+  }
+
+  setInterviewState(InterviewState.SAVING);
+
+  setTimeout(async () => {
+    // Next Question
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setIsSubmitting(false);
       return;
     }
 
-    setIsSubmitting(true);
+    // Interview Finished
+    setInterviewState(InterviewState.PROCESSING);
 
-    stopSpeaking();
-    stopTimer();
-
-
-
-    let audioBlob = null;
-
-    if (isRecording) {
-      try {
-        audioBlob =
-          await stopRecording();
-
-        setIsRecording(false);
-
-        if (audioBlob) {
-          const result =
-            await uploadInterviewAudio({
-              audioBlob,
-              question: currentQuestion,
-              role,
-            });
-
-          setTranscripts((previous) => [
-            ...previous,
-            {
-              question: currentQuestion,
-
-              transcript: result.transcript,
-
-              evaluation: result.evaluation,
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    setInterviewState(
-      InterviewState.SAVING
-    );
-
-    setTimeout(async () => {
-
-  // --------------------------
-  // Next Question
-  // --------------------------
-
-  if (
-    currentIndex <
-    questions.length - 1
-  ) {
-
-    setCurrentIndex(
-      (prev) => prev + 1
-    );
-
-    setIsSubmitting(false);
-
-    return;
-  }
-
-  // --------------------------
-  // Interview Finished
-  // --------------------------
-
-  setInterviewState(
-    InterviewState.PROCESSING
-  );
-
-  try {
-
-    const report =
-      await generateFinalReport({
-
+    try {
+      const report = await generateFinalReport({
         role,
 
-        resume_analysis:
-          "Resume analyzed successfully.",
+        resume_analysis: "Resume analyzed successfully.",
 
         questions,
 
-        answers:
-          transcripts.map(
-            (t) => t.transcript
-          ),
+        answers: updatedTranscripts.map(
+          (t) => t.transcript
+        ),
 
         behavior:
           behaviorPrediction || {
-
             engagement: 0,
-
             boredom: 0,
-
             confusion: 0,
-
             frustration: 0,
-
           },
-
       });
 
-    setFinalReport(report);
+      setFinalReport(report);
 
-    navigate("/report");
+      navigate("/report");
+    } catch (error) {
+      console.error(
+        "Failed to generate report",
+        error.response?.data || error
+      );
+    }
 
-  } catch (error) {
-
-    console.error(
-      "Failed to generate report",
-      error
-    );
-
-  }
-
-  setIsSubmitting(false);
-
-}, 700);
-  };
+    setIsSubmitting(false);
+  }, 700);
+};
 
   // ---------------------------------
   // Replay
