@@ -30,5 +30,3 @@ backend/ml/dataset/
 
 #models
 backend/ml/models/behavior_model.pkl
-
-backend/ml/models/feature_columns.pkl
