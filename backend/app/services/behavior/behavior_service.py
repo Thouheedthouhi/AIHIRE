@@ -18,28 +18,41 @@ class BehaviorService:
         self.model_path = model_dir / "behavior_model.pkl"
         self.feature_path = model_dir / "feature_columns.pkl"
 
-        # Download behavior model if it doesn't exist
-        if not self.model_path.exists():
+        use_gdrive = (
+            os.getenv("USE_GDRIVE", "false").lower() == "true"
+        )
 
-            print("Downloading behavior model from Google Drive...")
+        if use_gdrive:
 
-            file_id = os.getenv("MODEL_GDRIVE_ID")
+            if not self.model_path.exists():
 
-            if not file_id:
-                raise RuntimeError(
-                    "MODEL_GDRIVE_ID environment variable is not set."
+                print("Downloading behavior model from Google Drive...")
+
+                file_id = os.getenv("MODEL_GDRIVE_ID")
+
+                if not file_id:
+                    raise RuntimeError(
+                        "MODEL_GDRIVE_ID environment variable is not set."
+                    )
+
+                gdown.download(
+                    id=file_id,
+                    output=str(self.model_path),
+                    quiet=False,
                 )
 
-            gdown.download(
-                id=file_id,
-                output=str(self.model_path),
-                quiet=False,
-            )
+        else:
 
-        # Check feature columns file
+            print("Using local behavior model.")
+
+            if not self.model_path.exists():
+                raise RuntimeError(
+                    f"Local model not found: {self.model_path}"
+                )
+
         if not self.feature_path.exists():
             raise RuntimeError(
-                "feature_columns.pkl not found. Please add it to the repository."
+                f"Feature columns not found: {self.feature_path}"
             )
 
         # Lazy loading
@@ -61,14 +74,10 @@ class BehaviorService:
 
     def predict(self, features: dict):
 
-        # Load model only on first prediction
         self.load_model()
 
         df = pd.DataFrame(
-            [[
-                features.get(col, 0)
-                for col in self.feature_columns
-            ]],
+            [[features.get(col, 0) for col in self.feature_columns]],
             columns=self.feature_columns,
         )
 
