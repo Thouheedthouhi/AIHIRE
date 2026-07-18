@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-
+import { predictBehavior } from "../services/interview/behaviorService";
 import {
   useInterviewContext,
   InterviewState,
@@ -54,6 +54,8 @@ export default function useInterview(role) {
     setTranscripts,
 
     behaviorPrediction,
+    setBehaviorPrediction,
+    behaviorSummary,
 
     finalReport,
     setFinalReport,
@@ -213,6 +215,20 @@ export default function useInterview(role) {
     setInterviewState(InterviewState.PROCESSING);
 
     try {
+      let prediction = behaviorPrediction;
+
+if (behaviorSummary) {
+    try {
+        prediction = await predictBehavior(behaviorSummary);
+
+        setBehaviorPrediction(prediction);
+    } catch (error) {
+        console.error(
+            "Behavior Prediction Error:",
+            error
+        );
+    }
+}
       const report = await generateFinalReport({
         role,
 
@@ -225,7 +241,7 @@ export default function useInterview(role) {
         ),
 
         behavior:
-          behaviorPrediction || {
+          prediction  || {
             engagement: 0,
             boredom: 0,
             confusion: 0,
